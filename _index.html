@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>株式会社AXER</title>
+    <meta name="description" content="採用・教育不要。あなたの会社にAIを使いこなす担当者を月15万円でご提供。書類作業の効率化から営業支援まで、即戦力のAI人材があなたのビジネスを加速させます。古河市で業務効率化をお考えの方へ。AIツール導入・作業自動化でコスト削減と残業削減を実現。">
+    <link rel="icon" href="favicon.ico">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Noto Sans JP', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#2563eb',
+                        'primary-dark': '#1d4ed8',
+                        'accent': '#f59e0b',
+                        'accent-dark': '#d97706',
+                        'success': '#10b981',
+                        'gray-light': '#f8fafc',
+                        'gray-medium': '#64748b',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .top_logo {
+            display: block;
+            width: 130px;
+        }
+        
+        .hero-gradient {
+            background: url(img/mv.png) no-repeat center center;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            height: 90vh;
+        }
+        
+        .cta-gradient {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .accordion-content.active {
+            max-height: 200px;
+            padding-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800">
+
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm fixed w-full z-50 top-0">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- ロゴ -->
+                <div class="flex items-center space-x-2">
+                    <h1>
+                        <a href="/" class="top_logo">
+                            <img src="img/logo.png" alt="">
+                        </a>
+                    </h1>
+                </div>
+                
+                <!-- デスクトップナビゲーション -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#services" class="text-gray-600 hover:text-primary transition-colors">サービス内容</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-primary transition-colors">料金プラン</a>
+                    <a href="#case-studies" class="text-gray-600 hover:text-primary transition-colors">導入事例</a>
+                    <a href="#faq" class="text-gray-600 hover:text-primary transition-colors">FAQ</a>
+                    <a href="#contact" class="text-gray-600 hover:text-primary transition-colors">お問い合わせ</a>
+                    <a href="#company" class="text-gray-600 hover:text-primary transition-colors">会社概要</a>
+                    <a href="#contact" class="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg transition-colors">
+                        無料ヒアリング予約
+                    </a>
+                </div>
+                
+                <!-- モバイルメニューボタン -->
+                <button class="md:hidden text-gray-600" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- モバイルナビゲーション -->
+            <div id="mobileMenu" class="md:hidden hidden mt-4 pb-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-3 pt-4">
+                    <a href="#services" class="text-gray-600 hover:text-primary transition-colors">サービス内容</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-primary transition-colors">料金プラン</a>
+                    <a href="#case-studies" class="text-gray-600 hover:text-primary transition-colors">導入事例</a>
+                    <a href="#faq" class="text-gray-600 hover:text-primary transition-colors">FAQ</a>
+                    <a href="#contact" class="text-gray-600 hover:text-primary transition-colors">お問い合わせ</a>
+                    <a href="#company" class="text-gray-600 hover:text-primary transition-colors">会社概要</a>
+                    <a href="#contact" class="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg transition-colors inline-block text-center">
+                        無料ヒアリング予約
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ヒーローセクション -->
+    <section class="hero-gradient pt-24 pb-16 text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl md:text-6xl md:leading-tight font-bold mb-6 leading-normal">
+                    即戦力のAI人材を<br>
+                    <span class="text-yellow-300">月15万円で。</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-blue-100">
+                    採用・教育不要。あなたの会社に<br class="md:hidden">
+                    "AIを使いこなす担当者"を。
+                </p>
+                <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                    <a href="#contact" class="bg-accent hover:bg-accent-dark text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-calendar-check mr-2"></i>
+                        無料ヒアリングを予約
+                    </a>
+                    <a href="#contact" class="border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-4 rounded-lg text-lg font-semibold transition-all">
+                        資料ダウンロード
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 課題提起セクション -->
+    <section class="py-16 bg-gray-light">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    こんなお悩みありませんか？
+                </h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center p-6 bg-white rounded-xl shadow-md card-hover">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-question-circle text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">AIを使いたいけど、<br>誰も詳しくない</h3>
+                        <p class="text-gray-600">AI導入したいが、社内にノウハウを持った人材がいない</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-xl shadow-md card-hover">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-clock text-yellow-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">作業が多くて売上につながる<br>仕事に集中できない</h3>
+                        <p class="text-gray-600">日常業務に追われ、重要な戦略業務に時間を割けない</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-xl shadow-md card-hover">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-clock text-blue-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">人手不足で<br>毎月の処理が追いつかない</h3>
+                        <p class="text-gray-600">社員の負担が増え、残業や遅延が発生している</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- サービス紹介セクション -->
+    <section id="services" class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    AI人材ができること
+                </h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-primary card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-file-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">文書作成の自動化</h3>
+                                <p class="text-gray-600 text-sm">AIが定型文・報告書・メールを自動生成。人は確認と修正のみで済み、文章作成にかかる時間を大幅に短縮できる。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-success card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-file-invoice text-success"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">請求書入力の自動化</h3>
+                                <p class="text-gray-600 text-sm">OCRとAIで請求書や帳票の内容を自動読み取り・登録。入力ミスを防ぎ、経理担当者の負担を軽減できる。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-accent card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-people-group text-accent"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">会議要約の自動化</h3>
+                                <p class="text-gray-600 text-sm">音声認識とAI要約で会議内容を要点化。発言を短く整理し、参加者全員が後から効率的に内容を把握できる。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-amber-500 card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-headset text-amber-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">問い合わせ対応の自動化</h3>
+                                <p class="text-gray-600 text-sm">社内FAQを学習したAIが質問に即時回答。担当者対応を減らし、応答スピードと正確性を向上させる。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-sky-500 card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-chart-bar text-sky-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">データ分析の自動化</h3>
+                                <p class="text-gray-600 text-sm">AIが数値を解析し、傾向や改善点を自動で抽出。レポート作成を自動化し、判断までの時間を短縮できる。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 card-hover">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-chalkboard-teacher text-orange-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">社員教育</h3>
+                                <p class="text-gray-600 text-sm">社員が日常的にAIを活用できるよう、ツールの使い方・プロンプト設計を伴走サポート。マニュアル化・社内定着までフォローします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI担当イメージ図 -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-xl">
+                    <div class="text-center">
+                        <h3 class="text-xl font-semibold mb-6">AI担当が実際に動くイメージ</h3>
+                        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex-1 max-w-xs">
+                                <i class="fas fa-user-tie text-primary text-2xl mb-2"></i>
+                                <p class="font-medium">あなた</p>
+                                <p class="text-sm text-gray-600">戦略的業務に専念</p>
+                            </div>
+                            <div class="text-primary text-2xl">
+                                <i class="fas fa-arrow-right hidden md:block"></i>
+                                <i class="fas fa-arrow-down md:hidden"></i>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex-1 max-w-xs border-2 border-primary">
+                                <i class="fas fa-robot text-primary text-2xl mb-2"></i>
+                                <p class="font-medium">AI担当</p>
+                                <p class="text-sm text-gray-600">定型業務を自動化</p>
+                            </div>
+                            <div class="text-primary text-2xl">
+                                <i class="fas fa-arrow-right hidden md:block"></i>
+                                <i class="fas fa-arrow-down md:hidden"></i>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm flex-1 max-w-xs">
+                                <i class="fas fa-chart-line text-success text-2xl mb-2"></i>
+                                <p class="font-medium">成果向上</p>
+                                <p class="text-sm text-gray-600">効率化と売上UP</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Before/Afterセクション -->
+    <section class="py-16 bg-gray-light">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    AI担当が加わると、仕事がこう変わる
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Before -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-red-500 text-white p-4 text-center">
+                            <h3 class="text-xl font-semibold">Before</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                                <p>日報や報告書に時間がかかる</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                                <p>SNS更新が止まりがち</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                                <p>営業メールの作成に時間</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                                <p>顧客データの整理が手動</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- After -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-success text-white p-4 text-center">
+                            <h3 class="text-xl font-semibold">After（導入後）</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <p>AIが自動作成し、チェックだけでOK</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <p>AIが文章と画像を提案、定期更新が可能</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <p>AIが提案文を自動作成しスピードUP</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <p>自動集計・分析ですぐに活用できる</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 導入効果セクション -->
+    <section id="case-studies" class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    導入で得られる成果
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 製造業事例 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                        <div class="bg-primary text-white p-4">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-industry"></i>
+                                <span class="font-semibold">製造業A社</span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-red-600 mb-2">課題</h4>
+                                <p class="text-sm text-gray-600">月次報告書作成に毎月80時間、見積書作成の属人化</p>
+                            </div>
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-blue-600 mb-2">導入内容</h4>
+                                <p class="text-sm text-gray-600">報告書自動生成、見積書テンプレート化、データ分析</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-success mb-2">効果</h4>
+                                <div class="space-y-2">
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-success font-semibold">書類作業時間60時間削減</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-success font-semibold">成約率15％UP</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 小売業事例 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                        <div class="bg-accent text-white p-4">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="font-semibold">小売業B社</span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-red-600 mb-2">課題</h4>
+                                <p class="text-sm text-gray-600">SNS投稿が月2回程度、顧客データが活用できていない</p>
+                            </div>
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-blue-600 mb-2">導入内容</h4>
+                                <p class="text-sm text-gray-600">SNS投稿自動化、顧客分析レポート、キャンペーン効果測定</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-success mb-2">効果</h4>
+                                <div class="space-y-2">
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-success font-semibold">SNS投稿頻度4倍</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-success font-semibold">来店数120％UP</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 料金プランセクション -->
+    <section id="pricing" class="py-16 bg-gray-light">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    料金プラン
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- スタンダードプラン -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="bg-primary text-white p-6 text-center">
+                            <h3 class="text-2xl font-bold mb-2">スタンダード</h3>
+                            <div class="text-4xl font-bold">¥150,000<span class="text-lg">/月</span></div>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>月20hサポート</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>1〜2業務のAI化</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>チャット対応</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>運用サポート</span>
+                                </li>
+                            </ul>
+                            <a href="#contact" class="block bg-primary hover:bg-primary-dark text-white text-center py-3 rounded-lg transition-colors">
+                                このプランを選ぶ
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- プレミアムプラン -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-accent relative">
+                        <div class="absolute top-0 right-0 bg-accent text-white px-4 py-1 text-sm font-semibold">
+                            おすすめ
+                        </div>
+                        <div class="bg-accent text-white p-6 text-center">
+                            <h3 class="text-2xl font-bold mb-2">プレミアム</h3>
+                            <div class="text-4xl font-bold">¥450,000<span class="text-lg">/月</span></div>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>月60hサポート</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>複数業務のAI化</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>社員研修・教育</span>
+                                </li>
+                                <li class="flex items-start space-x-2">
+                                    <i class="fas fa-check text-success mt-1"></i>
+                                    <span>売上分析レポート</span>
+                                </li>
+                            </ul>
+                            <a href="#contact" class="block bg-accent hover:bg-accent-dark text-white text-center py-3 rounded-lg transition-colors">
+                                このプランを選ぶ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center bg-white p-6 rounded-xl shadow-md">
+                    <p class="text-lg mb-4">
+                        <span class="font-semibold">"即戦力のAI人材"を月15万円でチームに。</span><br>
+                        採用より早く・確実に、成果につながる体制をつくれます。
+                    </p>
+                    <a href="#contact" class="inline-block bg-accent hover:bg-accent-dark text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                        無料ヒアリングを予約
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-gray-50 py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- 見出し -->
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-blue-600 mb-4">単発依頼プラン（スポット対応）</h2>
+      <p class="text-gray-700 text-lg">
+        AI導入に限らず、Webサイト制作やSNS運用、社内システム開発など、<br>
+        必要な業務だけを単発でご依頼いただけます。
+      </p>
+    </div>
+
+    <!-- カード一覧 -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">🖥</div>
+        <h3 class="font-semibold text-lg mb-2">Webサイト制作</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          新規サイトやLP、リニューアル対応も可能。集客を意識した構成を提案します。
+        </p>
+      </div>
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">📱</div>
+        <h3 class="font-semibold text-lg mb-2">SNS運用代行</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          投稿文・画像の作成から運用設計までサポート。AI提案で効率的に発信できます。
+        </p>
+      </div>
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">🛒</div>
+        <h3 class="font-semibold text-lg mb-2">ECサイト構築</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          ShopifyやBASEなどを活用し、販売業務を自動化。運用もしっかり支援します。
+        </p>
+      </div>
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">🏢</div>
+        <h3 class="font-semibold text-lg mb-2">社内システム開発</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          自社業務に合わせた管理・共有ツールを開発し、チーム全体の効率を改善します。
+        </p>
+      </div>
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">📊</div>
+        <h3 class="font-semibold text-lg mb-2">エクセル／ワード改善</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+          手作業の表計算や文書作成を自動化。誰でも使いやすい仕組みに改善します。
+        </p>
+      </div>
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+        <div class="text-4xl mb-3">💡</div>
+        <h3 class="font-semibold text-lg mb-2">ChatGPT活用指導</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">
+            社内や個人の業務でChatGPTを活用する方法をレクチャー。<br>
+            プロンプト設計や業務テンプレート作成まで丁寧にサポートします。
+        </p>
+        </div>
+
+    </div>
+
+    <!-- 補足文 -->
+    <div class="text-center mt-16 text-gray-700">
+      <p class="text-base mb-3">
+        料金は内容により変動します。まずは無料ヒアリングでご相談ください。
+      </p>
+      <p class="text-sm text-gray-600 flex items-center justify-center gap-2">
+        💬 PC業務でわからないことや、効率化したい作業があれば、<br class="md:hidden">
+        どんな小さなことでもお気軽にご相談ください。
+      </p>
+
+      <a href="#contact" class="inline-block bg-primary hover:bg-primary-dark text-white px-8 py-3 mt-8 rounded-lg font-semibold transition-colors">
+                        単発依頼を相談する
+        </a>
+    </div>
+  </div>
+</section>
+
+
+    <!-- 導入フローセクション -->
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">
+                    導入までの流れ
+                </h2>
+                <p class="text-center text-gray-600 mb-12 text-lg">最短2週間</p>
+                
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                            1
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-md">
+                            <div class="text-3xl mb-3">🎯</div>
+                            <h3 class="font-semibold mb-2">業務内容ヒアリング</h3>
+                            <p class="text-sm text-gray-600">現在の業務フローと課題を詳しくお聞きします</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                            2
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-md">
+                            <div class="text-3xl mb-3">📋</div>
+                            <h3 class="font-semibold mb-2">プラン決定・ご契約</h3>
+                            <p class="text-sm text-gray-600">最適なプランをご提案し、契約手続きを行います</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                            3
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-md">
+                            <div class="text-3xl mb-3">⚙️</div>
+                            <h3 class="font-semibold mb-2">AI導入・設定開始</h3>
+                            <p class="text-sm text-gray-600">業務に合わせてAIシステムを構築・設定します</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                            4
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-md">
+                            <div class="text-3xl mb-3">📈</div>
+                            <h3 class="font-semibold mb-2">運用・効果測定・改善提案</h3>
+                            <p class="text-sm text-gray-600">継続的な運用サポートと効果分析を実施</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQセクション -->
+    <section id="faq" class="py-16 bg-gray-light">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    よくある質問
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-white rounded-lg shadow-md">
+                        <button class="w-full p-6 text-left flex items-center justify-between accordion-toggle" onclick="toggleAccordion(this)">
+                            <span class="font-semibold">AIの知識がなくても大丈夫ですか？</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content px-6">
+                            <p class="text-gray-600">はい、全く問題ありません。導入から運用まで、すべて専門スタッフがサポートします。AIに関する専門知識は不要です。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md">
+                        <button class="w-full p-6 text-left flex items-center justify-between accordion-toggle" onclick="toggleAccordion(this)">
+                            <span class="font-semibold">どのような業種に対応していますか？</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content px-6">
+                            <p class="text-gray-600">製造業、小売業、サービス業、建設業など、幅広い業種に対応しています。業務内容に応じてカスタマイズいたします。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md">
+                        <button class="w-full p-6 text-left flex items-center justify-between accordion-toggle" onclick="toggleAccordion(this)">
+                            <span class="font-semibold">社員への教育はしてもらえますか？</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content px-6">
+                            <p class="text-gray-600">はい。プレミアムプランでは社員研修を実施し、マニュアル作成も行います。スタンダードプランでも基本的な使い方説明は含まれます。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md">
+                        <button class="w-full p-6 text-left flex items-center justify-between accordion-toggle" onclick="toggleAccordion(this)">
+                            <span class="font-semibold">契約期間はありますか？</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content px-6">
+                            <p class="text-gray-600">最低契約期間は6ヶ月となります。長期契約割引もご用意しております。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md">
+                        <button class="w-full p-6 text-left flex items-center justify-between accordion-toggle" onclick="toggleAccordion(this)">
+                            <span class="font-semibold">効果が出るまでにどのくらいかかりますか？</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content px-6">
+                            <p class="text-gray-600">多くの場合、導入から1ヶ月以内に作業効率の改善を実感いただけます。定量的な効果は3ヶ月程度で明確になります。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTAセクション（お問い合わせ） -->
+    <section id="contact" class="py-16 bg-gradient-to-br from-primary to-primary-dark text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">
+                        まずは無料ヒアリングから
+                    </h2>
+                    <p class="text-xl text-blue-100">
+                        最短30分で、あなたの業務に合うAI活用プランをご提案します。
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-xl p-8 text-gray-800">
+                    <form onsubmit="sendToGAS(event)" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label class="block text-sm font-semibold mb-2">会社名 *</label>
+                            <input name="company" required class="w-full p-3 border rounded-lg" placeholder="株式会社○○">
+                          </div>
+                          <div>
+                            <label class="block text-sm font-semibold mb-2">お名前 *</label>
+                            <input name="name" required class="w-full p-3 border rounded-lg" placeholder="山田太郎">
+                          </div>
+                        </div>
+                      
+                        <div>
+                          <label class="block text-sm font-semibold mb-2">メールアドレス *</label>
+                          <input name="email" type="email" required class="w-full p-3 border rounded-lg" placeholder="example@company.com">
+                        </div>
+                      
+                        <div>
+                          <label class="block text-sm font-semibold mb-2">電話番号 *</label>
+                          <input name="tel" type="tel" required class="w-full p-3 border rounded-lg" placeholder="03-1234-5678">
+                        </div>
+                      
+                        <div>
+                          <label class="block text-sm font-semibold mb-2">相談内容</label>
+                          <textarea name="message" rows="4" class="w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                      
+                        <div>
+                          <label class="block text-sm font-semibold mb-2">希望プラン</label>
+                          <select name="plan" class="w-full p-3 border rounded-lg">
+                            <option value="未定">未定</option>
+                            <option value="スタンダード">スタンダード（¥150,000/月）</option>
+                            <option value="プレミアム">プレミアム（¥450,000/月）</option>
+                            <option value="単発プラン">単発プラン</option>
+                          </select>
+                        </div>
+                      
+                        <div class="text-center">
+                          <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg">
+                            無料ヒアリングを申し込む
+                          </button>
+                        </div>
+                      </form>
+                      
+                      <script>
+                      function sendToGAS(e) {
+                        e.preventDefault();
+                        const form = e.target;
+                        const data = new FormData(form);
+                        const params = new URLSearchParams(data);
+                      
+                        fetch("https://script.google.com/macros/s/AKfycbwgLr9sXFioS6oVzbM8UFuHSety-POLHHI7A6eq2rpWqXzLRoc-wi4MHTdnmQfnZbngCg/exec", {
+                          method: "POST",
+                          mode: "no-cors",
+                          body: params
+                        })
+                        .then(() => {
+                            // ✅ サンクスページへ遷移
+                            window.location.href = "/thanks.html";
+                        })
+                        .catch(err => {
+                            alert("送信中にエラーが発生しました。もう一度お試しください。");
+                            console.error(err);
+                        });
+                        form.reset();
+                      }
+                      </script>
+                      
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 会社概要セクション -->
+    <section id="company" class="py-16 bg-gray-light">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">
+                    会社概要
+                </h2>
+                
+                <div class="rounded-2xl border border-slate-200/70 bg-white/10 p-6 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/10">
+                    <h3 class="mb-4 text-lg font-semibold text-slate-900">会社情報</h3>
+                    <dl class="grid grid-cols-[120px_1fr] gap-x-4 gap-y-3 text-sm">
+                    <dt>会社名</dt>
+                    <dd class="font-medium text-slate-900">株式会社AXER</dd>
+                    
+                    
+                    <dt>所在地</dt>
+                    <dd class="font-medium text-slate-900">茨城県古河市鴻巣924-3</dd>
+                    
+                    
+                    <dt>設立</dt>
+                    <dd class="font-medium text-slate-900">2025年9月</dd>
+                    
+                    
+                    <dt>代表者</dt>
+                    <dd class="font-medium text-slate-900">中山 丈聖</dd>
+                    
+                    
+                    <dt>事業内容</dt>
+                    <dd class="font-medium text-slate-900">AI活用コンサル、業務自動化、データ分析、システム開発</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer class="bg-white gray-500 py-12">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-4 gap-8">
+                    <!-- ロゴ・会社名 -->
+                    <div>
+                        <div class="bg-white w-32">
+                            <img src="img/logo.png" alt="AXER株式会社">
+                        </div>
+                        
+                        <!-- SNSリンク -->
+                        <!-- <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fab fa-twitter text-xl"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fab fa-linkedin text-xl"></i>
+                            </a>
+                        </div> -->
+                    </div>
+                    
+                    <!-- ナビリンク -->
+                    <div>
+                        <h4 class="font-semibold mb-4">サービス</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#services" class="text-gray-400 hover:text-gray-800 transition-colors">サービス内容</a></li>
+                            <li><a href="#pricing" class="text-gray-400 hover:text-gray-800 transition-colors">料金プラン</a></li>
+                            <li><a href="#case-studies" class="text-gray-400 hover:text-gray-800 transition-colors">導入事例</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-4">サポート</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#faq" class="text-gray-400 hover:text-gray-800 transition-colors">FAQ</a></li>
+                            <li><a href="#contact" class="text-gray-400 hover:text-gray-800 transition-colors">お問い合わせ</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-4">法的情報</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="privacy.html" target="_blank" class="text-gray-400 hover:text-gray-800 transition-colors">プライバシーポリシー</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="section-divider my-8"></div>
+                
+                <div class="text-center text-gray-400 text-sm">
+                    <p>&copy;2025 AXER, Inc. All rights reserved</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // モバイルメニュー切り替え
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // アコーディオン切り替え
+        function toggleAccordion(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            // すべてのアコーディオンを閉じる
+            document.querySelectorAll('.accordion-content').forEach(item => {
+                if (item !== content) {
+                    item.classList.remove('active');
+                    item.previousElementSibling.querySelector('i').style.transform = 'rotate(0deg)';
+                }
+            });
+            
+            // クリックされたアコーディオンを切り替え
+            content.classList.toggle('active');
+            
+            if (content.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // フォーム送信
+        function submitForm(event) {
+            event.preventDefault();
+            
+            // フォームデータを収集
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // 送信完了メッセージ
+            alert('お問い合わせありがとうございます。担当者より3営業日以内にご連絡いたします。');
+            
+            // フォームをリセット
+            event.target.reset();
+        }
+
+        // スムーススクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ナビバーの背景変更
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('backdrop-blur-md', 'bg-white/95');
+            } else {
+                header.classList.remove('backdrop-blur-md', 'bg-white/95');
+            }
+        });
+    </script>
+
+</body>
+</html>
