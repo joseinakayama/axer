@@ -1,0 +1,16 @@
+{
+  "name": "hp-shindan",
+  "version": "1.0.0",
+  "description": "HP診断ツール - SEO & Webマーケティング分析",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.15.0",
+    "cheerio": "^1.2.0",
+    "express": "^5.2.1",
+    "xlsx": "^0.18.5"
+  }
+}

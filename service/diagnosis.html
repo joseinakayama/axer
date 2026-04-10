@@ -1,264 +1,890 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>無料Webサイト診断 | WebGrowth</title>
-    <meta
-      name="description"
-      content="プロのマーケターがWebサイトを無料分析。売上を逃している理由と、明日から実行できる改善策がわかる無料Webサイト診断です。"
-    />
-    <meta name="robots" content="index, follow" />
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-slate-50 text-slate-800 antialiased">
-    <header class="bg-white border-b border-slate-200">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>即効ホームページ診断</title>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --success: #22c55e;
+    --success-bg: #f0fdf4;
+    --warning: #f59e0b;
+    --warning-bg: #fffbeb;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --muted: #94a3b8;
+    --muted-bg: #f8fafc;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-sub: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Hero ===== */
+  .hero {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at top, #312e81, #1e1b4b 50%, #0f0e2a);
+    color: #fff;
+    padding: 88px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: min-height 0.6s ease, padding 0.4s;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%);
+    top: -200px; right: -200px;
+    pointer-events: none;
+  }
+  .hero.compact {
+    min-height: auto;
+    padding: 72px 24px 24px;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .hero.compact .hero-badge { display: none; }
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .hero.compact h1 { font-size: 18px; margin-bottom: 12px; }
+  .hero-sub {
+    color: rgba(255,255,255,0.6);
+    font-size: 17px;
+    margin-bottom: 48px;
+    max-width: 500px;
+  }
+  .hero.compact .hero-sub { display: none; }
+
+  .search-box {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    max-width: 580px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 6px;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.2s;
+  }
+  .search-box:focus-within { border-color: rgba(255,255,255,0.35); }
+  .search-box input {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+  }
+  .search-box input::placeholder { color: rgba(255,255,255,0.4); }
+  .hero.compact .search-box { max-width: 500px; padding: 4px; }
+  .hero.compact .search-box input { padding: 10px 14px; font-size: 14px; }
+  .search-btn {
+    padding: 14px 28px;
+    border-radius: 12px;
+    border: none;
+    background: #fff;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s;
+    font-family: inherit;
+  }
+  .search-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
+  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .hero.compact .search-btn { padding: 10px 20px; font-size: 13px; }
+  .spinner {
+    display: inline-block; width: 15px; height: 15px;
+    border: 2.5px solid rgba(79,70,229,0.2); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+    margin-right: 6px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { color: #fca5a5; font-size: 14px; margin-top: 16px; min-height: 22px; }
+  .hero.compact .error-msg { margin-top: 8px; font-size: 13px; }
+
+  /* ===== Results ===== */
+  #resultsSection { display: none; }
+  #resultsSection.visible { display: block; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Total Score */
+  .total-score-area {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 20px;
+    text-align: center;
+  }
+  .score-circle-wrap {
+    position: relative;
+    width: 160px; height: 160px;
+    margin: 0 auto 16px;
+  }
+  .score-circle { width: 160px; height: 160px; transform: rotate(-90deg); }
+  .score-circle-bg { fill: none; stroke: #e2e8f0; stroke-width: 12; }
+  .score-circle-fill {
+    fill: none; stroke: var(--primary); stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 408; stroke-dashoffset: 408;
+    transition: stroke-dashoffset 1.2s ease, stroke 0.5s;
+  }
+  .score-inner {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); text-align: center;
+  }
+  .score-inner .num { font-size: 44px; font-weight: 800; line-height: 1; display: block; }
+  .score-inner .max { font-size: 14px; color: var(--text-sub); display: block; }
+  .score-grade {
+    font-size: 16px; font-weight: 700;
+    padding: 8px 24px; border-radius: 24px;
+    display: inline-block; margin-bottom: 8px;
+  }
+  .score-meta-text { font-size: 13px; color: var(--text-sub); }
+  .score-guidance {
+    font-size: 14px;
+    color: var(--text-sub);
+    max-width: 520px;
+    margin: 12px auto 0;
+    line-height: 1.75;
+  }
+
+  /* Category Summary Cards */
+  .cat-summary {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .cat-summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .cat-summary-card:hover { box-shadow: var(--shadow-md); border-color: #cbd5e1; }
+  .cat-summary-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .cat-summary-info { flex: 1; min-width: 0; }
+  .cat-summary-name { font-size: 13px; font-weight: 600; color: var(--text-sub); }
+  .cat-summary-score { font-size: 22px; font-weight: 800; line-height: 1.2; }
+  .cat-summary-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .cat-summary-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+
+  /* Detail Section */
+  .main { max-width: 960px; margin: 0 auto; padding: 24px 16px 140px; }
+  .category { margin-bottom: 32px; }
+  .category-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px; padding: 0 2px;
+  }
+  .category-header-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .category-header-text { font-size: 16px; font-weight: 700; }
+  .category-header-score {
+    margin-left: auto; font-size: 13px; font-weight: 600;
+    color: var(--text-sub); white-space: nowrap;
+    background: #f1f5f9; padding: 4px 12px; border-radius: 8px;
+  }
+
+  /* Item Card */
+  .item-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .item-card:hover { box-shadow: var(--shadow-sm); }
+  .item-main {
+    padding: 16px 18px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .item-status-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0; font-weight: 700;
+  }
+  .item-status-icon.good { background: var(--success-bg); color: var(--success); }
+  .item-status-icon.warning { background: var(--warning-bg); color: var(--warning); }
+  .item-status-icon.bad { background: var(--danger-bg); color: var(--danger); }
+  .item-status-icon.manual { background: var(--muted-bg); color: var(--muted); }
+  .item-body { flex: 1; min-width: 0; }
+  .item-num-q { display: flex; align-items: baseline; gap: 8px; }
+  .item-num {
+    font-size: 11px; font-weight: 700; color: var(--text-sub);
+    background: #f1f5f9; padding: 2px 7px; border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .item-question { font-size: 14px; font-weight: 600; line-height: 1.6; }
+  .item-detail {
+    margin-top: 8px; font-size: 13px; line-height: 1.7;
+    padding: 10px 14px; border-radius: 10px;
+  }
+  .item-detail.good { background: var(--success-bg); color: #15803d; }
+  .item-detail.warning { background: var(--warning-bg); color: #92400e; }
+  .item-detail.bad { background: var(--danger-bg); color: #991b1b; }
+  .item-detail.manual { background: var(--muted-bg); color: #475569; }
+
+  .item-note-toggle {
+    margin-top: 8px;
+    font-size: 12px; color: var(--primary-light); cursor: pointer;
+    border: none; background: none; font-weight: 600; padding: 0;
+  }
+  .item-note-toggle:hover { text-decoration: underline; }
+  .item-note-text {
+    font-size: 12px; color: var(--text-sub); margin-top: 6px;
+    padding: 10px 14px; background: #f8fafc; border-radius: 10px;
+    line-height: 1.8; display: none;
+  }
+  .item-note-text.open { display: block; }
+
+  /* Footer */
+  .footer-actions {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px; display: none; justify-content: center; gap: 10px;
+    z-index: 100;
+  }
+  .footer-actions.visible { display: flex; }
+  .btn {
+    padding: 11px 28px; border-radius: 12px; border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+  .btn-outline { background: var(--card); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-outline:hover { border-color: #94a3b8; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    z-index: 200; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 24px; padding: 36px;
+    max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  }
+  .modal h2 { text-align: center; font-size: 18px; margin-bottom: 24px; font-weight: 700; }
+  .modal-score { text-align: center; margin-bottom: 28px; }
+  .modal-score .num { font-size: 64px; font-weight: 800; line-height: 1; }
+  .modal-score .max { font-size: 20px; color: var(--text-sub); }
+  .modal-grade {
+    text-align: center; font-size: 15px; font-weight: 700;
+    padding: 10px 24px; border-radius: 12px; margin-bottom: 28px;
+  }
+  .modal-cat-row {
+    display: flex; align-items: center; gap: 12px; font-size: 14px;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+  }
+  .modal-cat-row:last-child { border-bottom: none; }
+  .modal-cat-name { width: 140px; font-weight: 600; flex-shrink: 0; font-size: 13px; }
+  .modal-cat-bar-bg { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+  .modal-cat-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .modal-cat-score { width: 65px; text-align: right; font-weight: 700; font-size: 13px; color: var(--text-sub); flex-shrink: 0; }
+  .modal-note { font-size: 12px; color: var(--text-sub); text-align: center; margin-top: 20px; }
+  .modal-close {
+    display: block; margin: 28px auto 0; padding: 12px 40px;
+    border-radius: 12px; border: none; background: var(--primary);
+    color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .modal-close:hover { background: var(--primary-light); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 28px; }
+    .hero-sub { font-size: 15px; margin-bottom: 36px; }
+    .search-box { flex-direction: column; padding: 8px; }
+    .search-btn { width: 100%; text-align: center; }
+    .cat-summary { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 16px 12px 0; }
+    .cat-summary-card { padding: 14px; }
+    .cat-summary-score { font-size: 18px; }
+    .main { padding: 16px 12px 140px; }
+    .item-main { padding: 14px; gap: 10px; }
+    .item-question { font-size: 13px; }
+    .item-detail { font-size: 12px; padding: 8px 12px; }
+    .modal { padding: 28px 20px; border-radius: 20px; }
+    .total-score-area { padding: 24px 16px; }
+  }
+  @media print {
+    .hero { min-height: auto !important; padding: 20px; }
+    .footer-actions { display: none !important; }
+    .item-note-text { display: block !important; }
+    body { background: #fff; }
+  }
+</style>
+<script>
+  tailwind.config = { corePlugins: { preflight: false } };
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+  .axer-site-header, .axer-site-footer {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<header class="axer-site-header fixed top-0 w-full z-50 transition-all duration-300 bg-white shadow-md py-3" title="">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+    <div class="flex justify-between items-center">
+      <a class="flex items-center gap-2 no-underline text-inherit" href="../index.html">
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-trending-up w-8 h-8 text-[#1A202C]"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 7h6v6"></path>
+          <path d="m22 7-8.5 8.5-5-5L2 17"></path>
+        </svg>
+        <span class="font-heading font-bold text-xl tracking-wider text-[#1A202C]">WebGrowth</span>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-8" title="">
+        <ul class="flex gap-6" title="">
+          <li>
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#issues">課題</a>
+          </li>
+          <li>
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#solution">解決策</a>
+          </li>
+          <li>
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#services">強み</a>
+          </li>
+          <li title="">
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#testimonials" title="">事例</a>
+          </li>
+          <li title="">
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#flow" title="">フロー</a>
+          </li>
+          <li>
+            <a class="text-sm font-medium hover:text-[#DD6B20] transition-colors text-gray-700" href="../index.html#faq">FAQ</a>
+          </li>
+        </ul>
+        <a
+          class="bg-[#DD6B20] hover:bg-[#C05621] text-white px-6 py-3 rounded font-bold text-sm transition-colors flex items-center gap-2 shadow-lg"
+          href="../index.html#contact"
+          title="">無料相談はこちら
           <svg
             aria-hidden="true"
-            class="lucide lucide-trending-up w-8 h-8 text-[#1A202C]"
+            class="lucide lucide-arrow-right w-4 h-4"
             fill="none"
             height="24"
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            viewbox="0 0 24 24"
+            viewBox="0 0 24 24"
             width="24"
             xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 7h6v6">
-            </path>
-            <path d="m22 7-8.5 8.5-5-5L2 17">
-            </path>
-          </svg>
-          <a href="../index.html" class="font-bold text-xl tracking-wide">WebGrowth</a>
-        </div>
-        <a href="#form" class="text-sm font-semibold text-orange-600 hover:text-orange-700">無料診断を申し込む</a>
+            <path d="M5 12h14"></path>
+            <path d="m12 5 7 7-7 7"></path>
+          </svg></a>
+      </nav>
+
+      <button type="button" aria-label="Toggle menu" class="lg:hidden p-2 text-gray-900">
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-menu w-6 h-6"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 12h16"></path>
+          <path d="M4 18h16"></path>
+          <path d="M4 6h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="hero" id="hero">
+  <div class="hero-badge">50項目 AI自動チェック</div>
+  <h1>即効ホームページ診断</h1>
+  <p class="hero-sub">URLを入力するだけで、SEO・デザイン・コンテンツ・CTA・信頼性を瞬時にスコアリング</p>
+  <div class="search-box">
+    <input type="url" id="urlInput" placeholder="https://example.com" autocomplete="url">
+    <button class="search-btn" id="analyzeBtn" onclick="startAnalysis()">
+      <span id="btnText">分析する</span>
+    </button>
+  </div>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<div id="resultsSection">
+  <!-- Total Score -->
+  <div class="total-score-area">
+    <div class="score-circle-wrap">
+      <svg class="score-circle" viewBox="0 0 160 160">
+        <circle class="score-circle-bg" cx="80" cy="80" r="65" />
+        <circle class="score-circle-fill" id="scoreCircle" cx="80" cy="80" r="65" />
+      </svg>
+      <div class="score-inner">
+        <span class="num" id="totalScoreNum">0</span>
+        <span class="max">/ 100</span>
       </div>
-    </header>
+    </div>
+    <div class="score-grade" id="scoreGrade"></div>
+    <div class="score-meta-text" id="scoreMeta"></div>
+    <p class="score-guidance">診断の内容で100点を目指す必要はありません。ただ、80点以上を目指せるようになると、売れるホームページに変わっていきます。</p>
+  </div>
 
-    <main>
-      <section class="bg-slate-900 text-white py-16 md:py-24">
-        <div class="max-w-6xl mx-auto px-4 ">
-          <div>
-            <p class="text-orange-300 font-semibold mb-3">無料Webサイト診断</p>
-            <h1 class="text-3xl md:text-5xl font-black leading-tight mb-6">
-              プロのマーケターが御社のサイトを無料分析。<br />
-              売上を逃している「本当の理由」と「伸びしろ」がわかるWeb診断
-            </h1>
-            <p class="text-slate-200 leading-relaxed">
-              「なぜ問い合わせが来ないのか？」「どこを直せば売れるのか？」<br />
-              システムによる自動判定ではなく、実務経験豊富なプロが目視で分析し、貴社専用の改善レポートをお届けします。
-            </p>
-          </div>
-        </div>
-      </section>
+  <!-- Category Summary -->
+  <div class="cat-summary" id="catSummary"></div>
 
-      <section class="py-16 bg-white border-y border-slate-200">
-        <div class="max-w-6xl mx-auto px-4">
-          <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-8">貴社だけのための「オーダーメイド診断」をお届けします</h2>
-          <div class="grid md:grid-cols-2 gap-5">
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-6">
-              <p class="font-bold mb-2">お届け形式</p>
-              <p class="text-slate-600 text-sm leading-relaxed">
-                1〜2ページのPDFレポートをメールにてお送りします。
-              </p>
-            </div>
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-6">
-              <p class="font-bold mb-2">納期</p>
-              <p class="text-slate-600 text-sm leading-relaxed">お申し込みから3営業日以内にスピーディーにお届けします。</p>
-            </div>
-          </div>
-        </div>
-      </section>
+  <!-- Detail -->
+  <div class="main" id="main"></div>
+</div>
 
-      <section class="py-16">
-        <div class="max-w-6xl mx-auto px-4">
-          <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-8">診断完了までの3ステップ</h2>
-          <ol class="grid md:grid-cols-3 gap-5">
-            <li class="bg-white rounded-2xl border border-slate-200 p-6">
-              <p class="text-xs font-semibold text-orange-600 mb-2">STEP 1</p>
-              <p class="font-bold mb-2">フォーム入力（所要時間1分）</p>
-              <p class="text-sm text-slate-600">下記フォームに「サイトURL」と「現在のお悩み」を入力。</p>
-            </li>
-            <li class="bg-white rounded-2xl border border-slate-200 p-6">
-              <p class="text-xs font-semibold text-orange-600 mb-2">STEP 2</p>
-              <p class="font-bold mb-2">マーケターが独自に分析</p>
-              <p class="text-sm text-slate-600">貴社サイトと市場を実務目線でリサーチ・診断します。</p>
-            </li>
-            <li class="bg-white rounded-2xl border border-slate-200 p-6">
-              <p class="text-xs font-semibold text-orange-600 mb-2">STEP 3</p>
-              <p class="font-bold mb-2">診断結果をメールで受け取り</p>
-              <p class="text-sm text-slate-600">レポートをメールにてお届けします。</p>
-            </li>
-          </ol>
-        </div>
-      </section>
+<div class="footer-actions" id="footerActions">
+  <button class="btn btn-primary" onclick="showResult()">診断結果を見る</button>
+  <button class="btn btn-outline" onclick="exportCSV()">CSV出力</button>
+</div>
 
-      <section id="form" class="py-16 bg-slate-900 text-white">
-        <div class="max-w-3xl mx-auto px-4">
-          <h2 class="text-2xl md:text-3xl font-black mb-8">無料Webサイト診断 お申し込みフォーム</h2>
-          <form id="diagnosis-form" action="https://api.web3forms.com/submit" method="POST" class="bg-white text-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 space-y-6">
-            <input type="hidden" name="access_key" value="956a1ee5-1e72-423c-ac94-94ac96392fe7" />
-            <input type="hidden" name="subject" value="無料Webサイト診断フォームからのお申し込み" />
-            <input type="hidden" name="from_name" value="AXER 無料Webサイト診断" />
-            <input type="hidden" name="redirect" value="false" />
+<div class="modal-overlay" id="resultModal">
+  <div class="modal">
+    <h2>診断結果サマリー</h2>
+    <div class="modal-score">
+      <span class="num" id="modalScoreNum">0</span>
+      <span class="max"> / 100</span>
+    </div>
+    <div class="modal-grade" id="modalGrade"></div>
+    <div id="modalCats"></div>
+    <div class="modal-note" id="modalNote"></div>
+    <button class="modal-close" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
 
-            <div>
-              <label class="block font-bold mb-2">1. 診断をご希望のWebサイトURL <span class="text-red-600">【必須】</span></label>
-              <input name="website_url" type="url" required placeholder="https://example.com" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-
-            <fieldset>
-              <legend class="block font-bold mb-3">2. 現在、一番強く感じているお悩みは何ですか？ <span class="text-red-600">【必須】</span></legend>
-              <div class="space-y-2 text-sm">
-                <label class="flex items-start gap-2"><input type="checkbox" name="issues[]" value="アクセス（PV）が少ない・増えない" class="mt-1 issue-checkbox" /><span>アクセス（PV）が少ない・増えない</span></label>
-                <label class="flex items-start gap-2"><input type="checkbox" name="issues[]" value="問い合わせや売上に繋がらない" class="mt-1 issue-checkbox" /><span>問い合わせや売上に繋がらない</span></label>
-                <label class="flex items-start gap-2"><input type="checkbox" name="issues[]" value="サイトが古く、リニューアルすべきか迷っている" class="mt-1 issue-checkbox" /><span>サイトが古く、リニューアルすべきか迷っている</span></label>
-                <label class="flex items-start gap-2"><input type="checkbox" name="issues[]" value="運用（更新や広告）に手が回っていない" class="mt-1 issue-checkbox" /><span>運用（更新や広告）に手が回っていない</span></label>
-              </div>
-              <div class="mt-3">
-                <label class="block text-sm font-semibold mb-1">その他（自由入力欄）</label>
-                <input type="text" name="issue_other" placeholder="その他のお悩みをご記入ください" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-              </div>
-            </fieldset>
-
-            <div>
-              <label class="block font-bold mb-2">3. 会社名 <span class="text-red-600">【必須】</span></label>
-              <input name="company_name" type="text" required placeholder="株式会社〇〇" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-
-            <div>
-              <label class="block font-bold mb-2">4. ご担当者様名 <span class="text-red-600">【必須】</span></label>
-              <input name="person_in_charge" type="text" required placeholder="山田 太郎" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-
-            <div>
-              <label class="block font-bold mb-2">5. メールアドレス <span class="text-red-600">【必須】</span></label>
-              <input name="email" type="email" required placeholder="your_email@example.com" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-
-            <div>
-              <label class="block font-bold mb-2">6. 電話番号 <span class="text-slate-500">【任意】</span></label>
-              <input name="phone_number" type="tel" placeholder="090-1234-5678" class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-
-            <div id="diagnosis-form-status" class="hidden text-sm"></div>
-
-            <button type="submit" class="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg py-4 transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
-              無料で自社サイトの「伸びしろ」を診断する ＞
-            </button>
-
-            <div class="text-xs text-slate-600 leading-relaxed space-y-1">
-              <p>※診断後、強引な営業やしつこい電話勧誘は一切行いませんのでご安心ください。</p>
-              <p>※同業他社様からのお申し込みはお断りさせていただく場合がございます。</p>
-            </div>
-          </form>
-        </div>
-      </section>
-    </main>
-    <footer class="w-full bg-[#0F141E] py-12 border-t border-gray-800">
-      <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div class="flex items-center gap-2">
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-trending-up w-6 h-6 text-[#DD6B20]"
-              fill="none"
-              height="24"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewbox="0 0 24 24"
-              width="24"
-              xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 7h6v6">
-              </path>
-              <path d="m22 7-8.5 8.5-5-5L2 17">
-              </path>
-            </svg>
-            <span class="font-heading font-bold text-xl tracking-wider text-white">WebGrowth</span>
-          </div>
-          <div class="flex gap-6 text-sm text-gray-400">
-            <a class="hover:text-white transition-colors" href="privacy.html">プライバシーポリシー</a>
-            <a class="hover:text-white transition-colors" href="tokutei.html">特定商取引法に基づく表記</a>
-          </div>
-        </div>
-        <div class="mt-6">
-          <p class="font-heading font-bold text-xl tracking-wider text-white">会社概要</p>
-          <dl class="text-xl tracking-wider text-white mt-1 flex gap-x-4 gap-y-2">
-            <dt>会社名:</dt>
-            <dd>株式会社AXER</dd>
-          </dl>
-          <dl class="text-xl tracking-wider text-white mt-1 flex gap-x-4 gap-y-2">
-            <dt>所在地:</dt>
-            <dd>〒114-0014 東京都北区田端5-3-20 102号室</dd>
-          </dl>
-        </div>
-        <div class="mt-8 text-center text-gray-500 text-sm">
-          <p>
-            &copy; 2026 AXER Inc. All Rights Reserved.
-          </p>
-        </div>
+<footer class="axer-site-footer w-full bg-[#0F141E] py-12 border-t border-gray-800">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+      <a class="flex items-center gap-2 no-underline text-inherit" href="../index.html">
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-trending-up w-6 h-6 text-[#DD6B20]"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 7h6v6"></path>
+          <path d="m22 7-8.5 8.5-5-5L2 17"></path>
+        </svg>
+        <span class="font-heading font-bold text-xl tracking-wider text-white">WebGrowth</span>
+      </a>
+      <div class="flex gap-6 text-sm text-gray-400">
+        <a class="hover:text-white transition-colors" href="../privacy.html">プライバシーポリシー</a>
+        <a class="hover:text-white transition-colors" href="../tokutei.html">特定商取引法に基づく表記</a>
       </div>
-    </footer>
-    <script>
-      (function () {
-        const form = document.getElementById("diagnosis-form");
-        const statusEl = document.getElementById("diagnosis-form-status");
-        if (!form || !statusEl) return;
+    </div>
+    <div class="mt-6">
+      <p class="font-heading font-bold text-sm tracking-wider text-white">会社概要</p>
+      <dl class="text-sm tracking-wider text-white mt-1 flex gap-x-4 gap-y-2">
+        <dt>会社名:</dt>
+        <dd>株式会社AXER</dd>
+      </dl>
+      <dl class="text-sm tracking-wider text-white mt-1 flex gap-x-4 gap-y-2">
+        <dt>所在地:</dt>
+        <dd>〒114-0014 東京都北区田端5-3-20 102号室</dd>
+      </dl>
+    </div>
+    <div class="mt-8 text-center text-gray-500 text-sm">
+      <p>
+        &copy; 2026 AXER Inc. All Rights Reserved.
+      </p>
+    </div>
+  </div>
+</footer>
 
-        form.addEventListener("submit", async function (event) {
-          event.preventDefault();
+<script>
+const categories = [
+  { name: "全体", icon: "\u{1F310}", color: "#4f46e5", items: [
+    { num:1, q:"ページの表示速度に問題がないか", note:"ページ表示速度が遅い場合、離脱が増える傾向にあります。" },
+    { num:2, q:"Googleマップの埋め込みがGoogleビジネスプロフィールになっているか", note:"Googleビジネスプロフィールの埋め込みでMEO対策にも繋がります。" },
+    { num:3, q:"SSL化がされているか", note:"SSL化はセキュリティとSEOの両面で重要です。" },
+    { num:4, q:"ヘッダーが追従しているか", note:"ユーザーがいつでもいきたいページに飛べる設計にしましょう。" },
+    { num:5, q:"オリジナル画像素材を利用しているか", note:"オリジナル画像はSEO対策にも効果的です。" },
+    { num:6, q:"流し読みでも理解できる図や画像を使用しているか", note:"ユーザーは文章をしっかり読みません。ビジュアルでの理解を助けましょう。" },
+    { num:7, q:"1文1文が長すぎないか", note:"長すぎる文章は読みにくい印象を与えます。" },
+    { num:8, q:"わかりにくい専門用語が多くないか", note:"専門用語はなるべく避け、噛み砕いた表現を入れましょう。" },
+    { num:9, q:"OGPは設定しているか", note:"SNSでシェアされたときにカード形式で表示されます。" },
+    { num:10, q:"フローティングボタンで申し込みできる状況が作れているか", note:"スクロール追従の申込ボタンを設置しましょう。" },
+    { num:11, q:"お問い合わせページに遷移しやすい構造か", note:"ヘッダーナビやフッターにCTAを用意しましょう。" },
+    { num:12, q:"全体の情報量が少なすぎないか", note:"情報不足はSEO上も不利になります。" }
+  ]},
+  { name: "デザイン", icon: "\u{1F3A8}", color: "#7c3aed", items: [
+    { num:13, q:"色を多用していないか", note:"原則3色以内にするとストレスなく読めます。" },
+    { num:14, q:"文字装飾ルールが統一されているか", note:"重要箇所の装飾ルールを統一しましょう。" },
+    { num:15, q:"適切な文字の大きさか", note:"14〜16pxが読みやすい大きさです。" },
+    { num:16, q:"スマホ対応が綺麗にできているか", note:"スマホで読みやすいデザインを意識しましょう。" },
+    { num:17, q:"文章に抑揚（コントラスト）をつけているか", note:"大きさ・太さ・色などで違いを作りましょう。" }
+  ]},
+  { name: "ファーストビュー", icon: "\u{1F441}", color: "#0891b2", items: [
+    { num:18, q:"ベネフィットを入れているか", note:"顧客が得られる利益を訴求しましょう。" },
+    { num:19, q:"ターゲットがすぐにわかるか", note:"自分のための商品だと思わなければ読み進めません。" },
+    { num:20, q:"他社との違いが瞬時にわかるコピーがあるか", note:"差別化ポイントを明確にしましょう。" },
+    { num:21, q:"信用できるコンテンツが入っているか", note:"実績・受賞・メディア掲載などの信頼シグナルを入れましょう。" }
+  ]},
+  { name: "SEO対策", icon: "\u{1F50D}", color: "#059669", items: [
+    { num:22, q:"画像にAltタグを設定しているか", note:"画像検索やSEOに効果的です。" },
+    { num:23, q:"タイトルが適切に設定されているか", note:"32文字前後でキーワードを含めましょう。" },
+    { num:24, q:"ディスクリプションが適切に設定されているか", note:"120文字前後でキーワードを含めましょう。" },
+    { num:25, q:"他ページへのリンクを設置しているか", note:"内部リンクでサイト回遊を促しましょう。" },
+    { num:26, q:"ディレクトリ構造に問題がないか", note:"クローラーが巡回しやすい構造にしましょう。" },
+    { num:27, q:"ページを更新しているか", note:"高頻度の更新はGoogleからの評価に繋がります。" },
+    { num:28, q:"ドメインパワーが育っているか", note:"被リンクやドメインエイジが影響します。" },
+    { num:29, q:"他ページでもキーワード上位表示されているか", note:"複数ページでのキーワード対策が有効です。" },
+    { num:30, q:"Hタグが綺麗に入っているか", note:"見出し構造はSEOで重要な役割を果たします。" },
+    { num:31, q:"インデックス数が豊富か", note:"Webサイトの成長を把握する重要な指標です。" },
+    { num:32, q:"パンくずリストを入れているか", note:"ユーザビリティとSEOの観点で必須です。" }
+  ]},
+  { name: "コンテンツ", icon: "\u{1F4C4}", color: "#d97706", items: [
+    { num:33, q:"サービスの内容説明を詳細に伝えているか", note:"画像や文章で顧客が理解できるようにしましょう。" },
+    { num:34, q:"読み手の気を引くストーリーがあるか", note:"強いストーリーは成約率を大幅に上げます。" },
+    { num:35, q:"事例やお客様の声を掲載しているか", note:"最低でも3件以上掲載しましょう。" },
+    { num:36, q:"証拠に信憑性・具体性があるか", note:"写真や本名があると信憑性が高まります。" },
+    { num:37, q:"他社との違いが明確にわかるか", note:"比較表や選ばれる理由を明記しましょう。" },
+    { num:38, q:"価格を明記しているか", note:"料金不明だと離脱の原因になります。" },
+    { num:39, q:"サービス提供の流れの記載があるか", note:"STEP形式で示すと不安が軽減されます。" },
+    { num:40, q:"FAQでユーザーの疑問を払拭しているか", note:"5〜10個の質問をまとめましょう。" }
+  ]},
+  { name: "クロージング", icon: "\u{1F3AF}", color: "#dc2626", items: [
+    { num:41, q:"次の行動が具体的に記載されているか", note:"「LINEから体験予約を申し込む」など具体的に。" },
+    { num:42, q:"CTAボタンは目立つか", note:"流し見でも気付けるくらい目立たせましょう。" },
+    { num:43, q:"行動後の未来が明確か", note:"◯営業日以内に連絡がある、など。" },
+    { num:44, q:"心理的負担を軽減できているか", note:"「30秒で完了」「無料」などの表現を入れましょう。" },
+    { num:45, q:"営業日・営業時間が記載されているか", note:"記載するだけでCV率が上がります。" }
+  ]},
+  { name: "透明性", icon: "\u{1F91D}", color: "#4f46e5", items: [
+    { num:46, q:"サービス提供者の画像が掲載されているか", note:"写真掲載で安心感が向上します。" },
+    { num:47, q:"運営会社がわかるようになっているか", note:"会社概要やフッターにリンクを設置しましょう。" },
+    { num:48, q:"プライバシーポリシー・特商法表示があるか", note:"法的にも必要です。" }
+  ]},
+  { name: "フォーム", icon: "\u{1F4DD}", color: "#be185d", items: [
+    { num:49, q:"フォーム項目が多すぎないか", note:"項目が多いほど離脱に繋がります。" },
+    { num:50, q:"フォーム入力の工夫ができているか", note:"選択式やプレースホルダーを活用しましょう。" }
+  ]}
+];
 
-          const issueChecks = form.querySelectorAll(".issue-checkbox");
-          const hasChecked = Array.from(issueChecks).some(function (checkbox) {
-            return checkbox.checked;
-          });
+let analysisData = null;
 
-          if (!hasChecked) {
-            alert("お悩みは1つ以上選択してください。");
-            return;
-          }
+async function startAnalysis() {
+  const input = document.getElementById('urlInput');
+  const btn = document.getElementById('analyzeBtn');
+  const btnText = document.getElementById('btnText');
+  const errorMsg = document.getElementById('errorMsg');
+  let url = input.value.trim();
+  errorMsg.textContent = '';
+  if (!url) { errorMsg.textContent = 'URLを入力してください'; return; }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; input.value = url; }
 
-          const submitButton = form.querySelector('button[type="submit"]');
-          if (submitButton) submitButton.disabled = true;
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>分析中...';
 
-          statusEl.classList.remove("hidden", "text-red-600", "text-green-600");
-          statusEl.classList.add("text-gray-600");
-          statusEl.textContent = "送信中です。しばらくお待ちください...";
+  try {
+    const res = await fetch('/api/analyze50', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errorMsg.textContent = data.error || '分析エラー'; return; }
+    analysisData = data;
+    document.getElementById('hero').classList.add('compact');
+    document.getElementById('resultsSection').classList.add('visible');
+    document.getElementById('footerActions').classList.add('visible');
+    renderResults(data);
+    setTimeout(() => document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' }), 100);
+  } catch (err) {
+    errorMsg.textContent = 'サーバーに接続できません。';
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '分析する';
+  }
+}
 
-          try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-              method: "POST",
-              body: formData,
-            });
-            const result = await response.json();
+document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') startAnalysis(); });
 
-            if (response.ok && result.success) {
-              statusEl.classList.remove("text-gray-600");
-              statusEl.classList.add("text-green-600");
-              statusEl.textContent =
-                "送信が完了しました。担当者より3営業日以内にご連絡いたします。";
-              form.reset();
-            } else {
-              throw new Error(result.message || "送信に失敗しました。");
-            }
-          } catch (error) {
-            statusEl.classList.remove("text-gray-600");
-            statusEl.classList.add("text-red-600");
-            statusEl.textContent =
-              error instanceof Error
-                ? error.message
-                : "送信に失敗しました。時間をおいて再度お試しください。";
-          } finally {
-            if (submitButton) submitButton.disabled = false;
-          }
-        });
-      })();
-    </script>
-  </body>
+function getStatus(score) {
+  if (score === null) return 'manual';
+  if (score === 2) return 'good';
+  if (score === 1) return 'warning';
+  return 'bad';
+}
+function getStatusIcon(score) {
+  if (score === null) return '?';
+  if (score === 2) return '\u2713';
+  if (score === 1) return '!';
+  return '\u2715';
+}
+function getScoreColor(pct) {
+  if (pct >= 80) return '#22c55e';
+  if (pct >= 60) return '#4f46e5';
+  if (pct >= 40) return '#f59e0b';
+  return '#ef4444';
+}
+
+function renderResults(data) {
+  let total = 0, autoCount = 0, manualCount = 0;
+  data.items.forEach(i => { if (i.score !== null) { total += i.score; autoCount++; } else manualCount++; });
+
+  // Circle score
+  const circumference = 2 * Math.PI * 65;
+  const circle = document.getElementById('scoreCircle');
+  const offset = circumference - (total / 100) * circumference;
+  const color = getScoreColor(total);
+  circle.style.stroke = color;
+  circle.style.strokeDasharray = circumference;
+  circle.style.strokeDashoffset = circumference;
+  requestAnimationFrame(() => requestAnimationFrame(() => { circle.style.strokeDashoffset = offset; }));
+
+  document.getElementById('totalScoreNum').textContent = total;
+  document.getElementById('totalScoreNum').style.color = color;
+
+  const gradeEl = document.getElementById('scoreGrade');
+  if (total >= 80) { gradeEl.textContent = '優秀！売れるHPです'; gradeEl.style.background = '#f0fdf4'; gradeEl.style.color = '#16a34a'; }
+  else if (total >= 60) { gradeEl.textContent = '良好 - もう少しで優秀レベル'; gradeEl.style.background = '#eef2ff'; gradeEl.style.color = '#4338ca'; }
+  else if (total >= 40) { gradeEl.textContent = '改善の余地あり'; gradeEl.style.background = '#fffbeb'; gradeEl.style.color = '#b45309'; }
+  else { gradeEl.textContent = '要改善 - 優先的に対策しましょう'; gradeEl.style.background = '#fef2f2'; gradeEl.style.color = '#dc2626'; }
+
+  document.getElementById('scoreMeta').textContent = `${autoCount}項目を自動判定${manualCount > 0 ? ` / ${manualCount}項目は目視確認が必要` : ''}`;
+
+  // Category summary cards
+  const sumContainer = document.getElementById('catSummary');
+  sumContainer.innerHTML = '';
+  categories.forEach((cat, idx) => {
+    const maxScore = cat.items.length * 2;
+    let catScore = 0;
+    cat.items.forEach(item => {
+      const r = data.items.find(i => i.num === item.num);
+      if (r && r.score !== null) catScore += r.score;
+    });
+    const pct = Math.round((catScore / maxScore) * 100);
+    const barColor = getScoreColor(pct);
+
+    const card = document.createElement('div');
+    card.className = 'cat-summary-card';
+    card.onclick = () => document.getElementById('cat-' + idx).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    card.innerHTML = `
+      <div class="cat-summary-icon" style="background:${cat.color}12;color:${cat.color}">${cat.icon}</div>
+      <div class="cat-summary-info">
+        <div class="cat-summary-name">${cat.name}</div>
+        <div class="cat-summary-score" style="color:${barColor}">${catScore}<span style="font-size:13px;color:var(--text-sub);font-weight:500"> / ${maxScore}</span></div>
+        <div class="cat-summary-bar"><div class="cat-summary-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      </div>
+    `;
+    sumContainer.appendChild(card);
+  });
+
+  // Detail cards
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  categories.forEach((cat, idx) => {
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.id = 'cat-' + idx;
+    const maxScore = cat.items.length * 2;
+    let catScore = 0;
+    cat.items.forEach(item => {
+      const r = data.items.find(i => i.num === item.num);
+      if (r && r.score !== null) catScore += r.score;
+    });
+
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-header-icon" style="background:${cat.color}12;color:${cat.color}">${cat.icon}</div>
+        <div class="category-header-text">${cat.name}</div>
+        <div class="category-header-score">${catScore} / ${maxScore}点</div>
+      </div>
+    `;
+
+    cat.items.forEach(item => {
+      const result = data.items.find(i => i.num === item.num);
+      const score = result ? result.score : null;
+      const detail = result ? result.detail : '';
+      const status = getStatus(score);
+      const icon = getStatusIcon(score);
+
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      const noteHtml = item.note ? `
+        <button class="item-note-toggle" onclick="toggleNote(this)">補足を見る</button>
+        <div class="item-note-text">${item.note.replace(/\n/g, '<br>')}</div>
+      ` : '';
+
+      card.innerHTML = `
+        <div class="item-main">
+          <div class="item-status-icon ${status}">${icon}</div>
+          <div class="item-body">
+            <div class="item-num-q">
+              <span class="item-num">${item.num}</span>
+              <span class="item-question">${item.q}</span>
+            </div>
+            <div class="item-detail ${status}">${detail}</div>
+            ${noteHtml}
+          </div>
+        </div>
+      `;
+      section.appendChild(card);
+    });
+    main.appendChild(section);
+  });
+}
+
+function toggleNote(btn) {
+  const text = btn.nextElementSibling;
+  text.classList.toggle('open');
+  btn.textContent = text.classList.contains('open') ? '補足を閉じる' : '補足を見る';
+}
+
+function showResult() {
+  if (!analysisData) return;
+  const modal = document.getElementById('resultModal');
+  let total = 0, manualItems = 0;
+  analysisData.items.forEach(i => { if (i.score !== null) total += i.score; else manualItems++; });
+
+  document.getElementById('modalScoreNum').textContent = total;
+  const color = getScoreColor(total);
+  document.getElementById('modalScoreNum').style.color = color;
+
+  const grade = document.getElementById('modalGrade');
+  if (total >= 80) { grade.textContent = '優秀！売れるHPです'; grade.style.background = '#f0fdf4'; grade.style.color = '#16a34a'; }
+  else if (total >= 60) { grade.textContent = '良好 - あと少しで優秀レベル！'; grade.style.background = '#eef2ff'; grade.style.color = '#4338ca'; }
+  else if (total >= 40) { grade.textContent = '改善の余地あり'; grade.style.background = '#fffbeb'; grade.style.color = '#b45309'; }
+  else { grade.textContent = '要改善 - 優先的に対策しましょう'; grade.style.background = '#fef2f2'; grade.style.color = '#dc2626'; }
+
+  const catsEl = document.getElementById('modalCats');
+  catsEl.innerHTML = '';
+  categories.forEach(cat => {
+    let catScore = 0, catManual = 0;
+    const maxScore = cat.items.length * 2;
+    cat.items.forEach(item => {
+      const r = analysisData.items.find(i => i.num === item.num);
+      if (r && r.score !== null) catScore += r.score; else catManual++;
+    });
+    const pct = (catScore / maxScore) * 100;
+    const barColor = getScoreColor(pct);
+    catsEl.innerHTML += `
+      <div class="modal-cat-row">
+        <div class="modal-cat-name">${cat.icon} ${cat.name}</div>
+        <div class="modal-cat-bar-bg"><div class="modal-cat-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="modal-cat-score">${catScore} / ${maxScore}</div>
+      </div>`;
+  });
+  document.getElementById('modalNote').textContent = manualItems > 0 ? `${manualItems}項目は目視確認が必要です` : '';
+  modal.classList.add('open');
+}
+
+function closeModal() { document.getElementById('resultModal').classList.remove('open'); }
+document.getElementById('resultModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+function exportCSV() {
+  if (!analysisData) return;
+  const url = document.getElementById('urlInput').value;
+  const today = new Date().toISOString().split('T')[0];
+  let csv = '\uFEFF\u5373\u52B9\u30DB\u30FC\u30E0\u30DA\u30FC\u30B8\u8A3A\u65AD\n';
+  csv += `\u5BFE\u8C61URL,${url}\n\u8A3A\u65AD\u65E5,${today}\n\nNo,\u30AB\u30C6\u30B4\u30EA\u30FC,\u9805\u76EE,\u8A55\u4FA1,\u5206\u6790\u7D50\u679C\n`;
+  categories.forEach(cat => {
+    cat.items.forEach(item => {
+      const r = analysisData.items.find(i => i.num === item.num);
+      const s = r ? r.score : null;
+      const ev = s === 2 ? '\u25CB' : s === 1 ? '\u25B3' : s === 0 ? '\u00D7' : '\u672A\u5224\u5B9A';
+      const d = (r ? r.detail : '').replace(/"/g, '""');
+      csv += `${item.num},"${cat.name}","${item.q}",${ev},"${d}"\n`;
+    });
+  });
+  let t = 0; analysisData.items.forEach(i => { if (i.score !== null) t += i.score; });
+  csv += `\n\u5408\u8A08,${t},/ 100\n`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `HP\u8A3A\u65AD_${today}.csv`;
+  a.click();
+}
+</script>
+</body>
 </html>
