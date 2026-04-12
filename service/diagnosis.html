@@ -314,6 +314,16 @@
   .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
   .btn-outline { background: var(--card); color: var(--text); border: 1.5px solid var(--border); }
   .btn-outline:hover { border-color: #94a3b8; }
+  .btn-line {
+    background: #06c755;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-line:hover { background: #05b34c; transform: translateY(-1px); }
+  .btn-line svg { flex-shrink: 0; }
 
   /* Modal */
   .modal-overlay {
@@ -352,6 +362,31 @@
   }
   .modal-close:hover { background: var(--primary-light); }
 
+  .line-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 96px;
+    transform: translateX(-50%) translateY(12px);
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 13px;
+    line-height: 1.55;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .line-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .line-toast.line-toast--ok { background: #14532d; }
+
   /* Responsive */
   @media (max-width: 640px) {
     .hero h1 { font-size: 28px; }
@@ -370,6 +405,7 @@
   }
   @media print {
     .hero { min-height: auto !important; padding: 20px; }
+    .line-toast { display: none !important; }
     .footer-actions { display: none !important; }
     .item-note-text { display: block !important; }
     body { background: #fff; }
@@ -518,7 +554,10 @@
 
 <div class="footer-actions" id="footerActions">
   <button class="btn btn-primary" onclick="showResult()">診断結果を見る</button>
-  <button class="btn btn-outline" onclick="exportCSV()">CSV出力</button>
+  <button type="button" class="btn btn-line" onclick="openLineAddFriend()" aria-label="LINEで詳しい診断結果を受け取る">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.41-.104-.534-.294l-2.123-3.981-.015 3.896c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .385.104.516.286l2.125 4.015.01-4.288c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.084.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+    詳細結果をLINEで受け取る
+  </button>
 </div>
 
 <div class="modal-overlay" id="resultModal">
@@ -534,6 +573,8 @@
     <button class="modal-close" onclick="closeModal()">閉じる</button>
   </div>
 </div>
+
+<div id="lineToast" class="line-toast" role="status" aria-live="polite" hidden></div>
 
 <footer class="axer-site-footer w-full bg-[#0F141E] py-12 border-t border-gray-800">
   <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
@@ -651,6 +692,9 @@ const categories = [
 ];
 
 let analysisData = null;
+
+/** LINE公式アカウントの「友だち追加」URL（LINEビジネスIDマネージャー → ホームで確認） */
+const LINE_ADD_FRIEND_URL = 'https://lin.ee/TyDk96Y';
 
 async function startAnalysis() {
   const input = document.getElementById('urlInput');
@@ -862,28 +906,68 @@ function showResult() {
 function closeModal() { document.getElementById('resultModal').classList.remove('open'); }
 document.getElementById('resultModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 
-function exportCSV() {
-  if (!analysisData) return;
-  const url = document.getElementById('urlInput').value;
+function buildLineHandoffText() {
+  if (!analysisData) return '';
+  const url = document.getElementById('urlInput').value.trim() || '(未入力)';
+  let total = 0;
+  let manual = 0;
+  analysisData.items.forEach(i => { if (i.score !== null) total += i.score; else manual++; });
   const today = new Date().toISOString().split('T')[0];
-  let csv = '\uFEFF\u5373\u52B9\u30DB\u30FC\u30E0\u30DA\u30FC\u30B8\u8A3A\u65AD\n';
-  csv += `\u5BFE\u8C61URL,${url}\n\u8A3A\u65AD\u65E5,${today}\n\nNo,\u30AB\u30C6\u30B4\u30EA\u30FC,\u9805\u76EE,\u8A55\u4FA1,\u5206\u6790\u7D50\u679C\n`;
-  categories.forEach(cat => {
-    cat.items.forEach(item => {
-      const r = analysisData.items.find(i => i.num === item.num);
-      const s = r ? r.score : null;
-      const ev = s === 2 ? '\u25CB' : s === 1 ? '\u25B3' : s === 0 ? '\u00D7' : '\u672A\u5224\u5B9A';
-      const d = (r ? r.detail : '').replace(/"/g, '""');
-      csv += `${item.num},"${cat.name}","${item.q}",${ev},"${d}"\n`;
-    });
-  });
-  let t = 0; analysisData.items.forEach(i => { if (i.score !== null) t += i.score; });
-  csv += `\n\u5408\u8A08,${t},/ 100\n`;
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `HP\u8A3A\u65AD_${today}.csv`;
-  a.click();
+  const lines = [
+    '【即効ホームページ診断・詳細レポート希望】',
+    `診断日: ${today}`,
+    `対象URL: ${url}`,
+    `合計スコア: ${total} / 100`,
+    manual > 0 ? `※自動判定外: ${manual}項目（目視確認項目あり）` : null,
+    '',
+    '上記URLの詳しい診断結果のご送付をお願いします。',
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+let lineToastTimer = null;
+function showLineToast(message, ok) {
+  const el = document.getElementById('lineToast');
+  el.textContent = message;
+  el.classList.toggle('line-toast--ok', !!ok);
+  el.removeAttribute('hidden');
+  requestAnimationFrame(() => el.classList.add('visible'));
+  if (lineToastTimer) clearTimeout(lineToastTimer);
+  lineToastTimer = setTimeout(() => {
+    el.classList.remove('visible');
+    lineToastTimer = setTimeout(() => {
+      el.setAttribute('hidden', '');
+      lineToastTimer = null;
+    }, 280);
+  }, 4200);
+}
+
+async function openLineAddFriend() {
+  if (!analysisData) return;
+  const urlNotSet = LINE_ADD_FRIEND_URL.includes('YOUR_BASIC_ID');
+
+  if (urlNotSet) {
+    console.warn('[diagnosis] LINE_ADD_FRIEND_URL を LINEビジネスIDマネージャーで発行した友だち追加URLに設定してください。');
+    showLineToast('友だち追加URLが未設定です。サイト管理者にご連絡ください。', false);
+    return;
+  }
+
+  const text = buildLineHandoffText();
+  let copied = false;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch { /* noop */ }
+  }
+
+  window.open(LINE_ADD_FRIEND_URL, '_blank', 'noopener,noreferrer');
+
+  if (copied) {
+    showLineToast('診断内容をコピーしました。LINEのトークに貼り付けて送信してください。', true);
+  } else {
+    showLineToast('LINEを開きました。対象URLとスコアをトークに入力して送信してください。', false);
+  }
 }
 </script>
 </body>

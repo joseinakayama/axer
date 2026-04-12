@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>診断レポート（専用）</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Sans', 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(160deg, #1e1b4b 0%, #312e81 40%, #0f172a 100%);
+      color: #f8fafc;
+      min-height: 100dvh;
+      padding: 24px 20px 40px;
+      line-height: 1.75;
+    }
+    .card {
+      max-width: 420px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 28px 22px;
+      backdrop-filter: blur(12px);
+    }
+    h1 { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .sub { font-size: 0.875rem; color: rgba(248,250,252,0.72); margin-bottom: 20px; }
+    .status { font-size: 0.9rem; padding: 14px 16px; border-radius: 12px; margin-top: 16px; }
+    .status.ok { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: #86efac; }
+    .status.err { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .status.wait { background: rgba(255,255,255,0.06); color: rgba(248,250,252,0.85); }
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.2); margin-bottom: 12px;
+    }
+    .next { margin-top: 20px; font-size: 0.8rem; color: rgba(248,250,252,0.55); }
+    a { color: #a5b4fc; }
+  </style>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    /** LINE Developers → LIFF アプリの LIFF ID（数字-英小文字）に差し替え */
+    const LIFF_ID = '2009774828-fLas1Ciw';
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>診断レポート専用ページ</h1>
+    <p class="sub">友だち追加時にお送りしたリンクからのみ、正しく開けます。</p>
+    <div id="out"><p class="status wait">読み込み中…</p></div>
+    <p class="next">ホームページ診断は <a href="/service/diagnosis.html">こちら</a> から実行できます。</p>
+  </div>
+  <script>
+    (function () {
+      const out = document.getElementById('out');
+
+      function show(html) {
+        out.innerHTML = html;
+      }
+
+      if (!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID') {
+        show('<p class="status err">LIFF_ID が未設定です。service/liff-line.html 内の LIFF_ID を編集してください。</p>');
+        return;
+      }
+
+      async function run() {
+        try {
+          await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+        } catch (e) {
+          show('<p class="status err">LIFF の初期化に失敗しました。LINEアプリ内で開いてください。</p>');
+          return;
+        }
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const ctx = liff.getAppContext && liff.getAppContext();
+        const state = (ctx && ctx.state) || new URLSearchParams(window.location.search).get('liff.state');
+        if (!state) {
+          show('<p class="status err">専用リンク（liff.state）が見つかりません。トークに届いたURLから開き直してください。</p>');
+          return;
+        }
+
+        let idToken;
+        try {
+          idToken = liff.getIDToken();
+        } catch (e) {
+          show('<p class="status err">IDトークンを取得できません。LIFFアプリ設定で OpenID Connect・スコープ openid を有効にしてください。</p>');
+          return;
+        }
+
+        if (!idToken) {
+          show('<p class="status err">ログイン情報がありません。一度閉じて、トークのURLから再度お試しください。</p>');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/line/verify-dedicated', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken, t: state }),
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            show('<p class="status err">本人確認に失敗しました。トークに届いたURLから開き直すか、お問い合わせください。</p>');
+            return;
+          }
+          const pic = data.picture
+            ? '<img class="avatar" src="' + data.picture.replace(/"/g, '') + '" alt="">'
+            : '';
+          show(
+            pic +
+              '<p class="status ok">ようこそ、' +
+              (data.displayName ? escapeHtml(data.displayName) : 'お客様') +
+              ' 様。専用リンクを確認しました。</p>' +
+              '<p class="sub" style="margin-top:16px">このあと、ここにCSVダウンロードや詳細レポートを設置できます（別途API連携）。</p>'
+          );
+        } catch (e) {
+          show('<p class="status err">サーバーと通信できませんでした。</p>');
+        }
+      }
+
+      function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      run();
+    })();
+  </script>
+</body>
+</html>
