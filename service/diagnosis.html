@@ -942,6 +942,33 @@ function showLineToast(message, ok) {
   }, 4200);
 }
 
+function exportCSV() {
+  if (!analysisData) return;
+  const url = document.getElementById('urlInput').value;
+  const today = new Date().toISOString().split('T')[0];
+  let csv = '\uFEFF\u5373\u52B9\u30DB\u30FC\u30E0\u30DA\u30FC\u30B8\u8A3A\u65AD\n';
+  csv += `\u5BFE\u8C61URL,${url}\n\u8A3A\u65AD\u65E5,${today}\n\nNo,\u30AB\u30C6\u30B4\u30EA\u30FC,\u9805\u76EE,\u8A55\u4FA1,\u5206\u6790\u7D50\u679C\n`;
+  categories.forEach(cat => {
+    cat.items.forEach(item => {
+      const r = analysisData.items.find(i => i.num === item.num);
+      const s = r ? r.score : null;
+      const ev = s === 2 ? '\u25CB' : s === 1 ? '\u25B3' : s === 0 ? '\u00D7' : '\u672A\u5224\u5B9A';
+      const d = (r ? r.detail : '').replace(/"/g, '""');
+      csv += `${item.num},"${cat.name}","${item.q}",${ev},"${d}"\n`;
+    });
+  });
+  let t = 0;
+  analysisData.items.forEach(i => { if (i.score !== null) t += i.score; });
+  csv += `\n\u5408\u8A08,${t},/ 100\n`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = `HP\u8A3A\u65AD_${today}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(href), 2000);
+}
+
 async function openLineAddFriend() {
   if (!analysisData) return;
   const urlNotSet = LINE_ADD_FRIEND_URL.includes('YOUR_BASIC_ID');
@@ -951,6 +978,8 @@ async function openLineAddFriend() {
     showLineToast('友だち追加URLが未設定です。サイト管理者にご連絡ください。', false);
     return;
   }
+
+  exportCSV();
 
   const text = buildLineHandoffText();
   let copied = false;
@@ -964,9 +993,9 @@ async function openLineAddFriend() {
   window.open(LINE_ADD_FRIEND_URL, '_blank', 'noopener,noreferrer');
 
   if (copied) {
-    showLineToast('診断内容をコピーしました。LINEのトークに貼り付けて送信してください。', true);
+    showLineToast('CSVをダウンロードしました。概要をコピーしました。LINEで友だち追加し、トークに貼り付けて送信してください。', true);
   } else {
-    showLineToast('LINEを開きました。対象URLとスコアをトークに入力して送信してください。', false);
+    showLineToast('CSVをダウンロードしました。LINEを開きました。トークには手入力でURLとスコアを送ってください。', false);
   }
 }
 </script>

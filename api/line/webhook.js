@@ -5,6 +5,7 @@
  * コンソールの Webhook URL: https://<ドメイン>/api/line/webhook
  *
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
+ * follow 時は Push API で送信（あいさつメッセージと別の2通目として届きやすい）
  * 任意: LINE_LINK_TOKEN_SECRET（未設定時は CHANNEL_SECRET を署名鍵に使用）
  */
 
