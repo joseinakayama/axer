@@ -296,12 +296,51 @@
   }
   .item-note-text.open { display: block; }
 
+  .score-half-note {
+    font-size: 13px;
+    color: #4338ca;
+    font-weight: 600;
+    max-width: 540px;
+    margin: 14px auto 0;
+    line-height: 1.65;
+    padding: 0 20px;
+    text-align: center;
+  }
+  .line-locked-hint {
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    border: 1px dashed #c7d2fe !important;
+  }
+  .line-locked-hint .item-body { font-size: 13px; color: var(--text-sub); line-height: 1.7; }
+  .line-full-teaser {
+    margin-top: 28px;
+    margin-bottom: 24px;
+    padding: 22px 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 55%, #f0fdf4 100%);
+    border: 1px solid #6ee7b7;
+    text-align: center;
+  }
+  .line-full-teaser h3 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #065f46;
+    margin-bottom: 10px;
+  }
+  .line-full-teaser p {
+    font-size: 13px;
+    color: #047857;
+    line-height: 1.75;
+    margin-bottom: 14px;
+  }
+  .line-full-teaser .btn-line { margin: 0 auto; }
+
   /* Footer */
   .footer-actions {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
     border-top: 1px solid var(--border);
-    padding: 14px 20px; display: none; justify-content: center; gap: 10px;
+    padding: 14px 20px; display: none; justify-content: center; align-items: center;
+    gap: 10px; flex-wrap: wrap;
     z-index: 100;
   }
   .footer-actions.visible { display: flex; }
@@ -542,6 +581,7 @@
     </div>
     <div class="score-grade" id="scoreGrade"></div>
     <div class="score-meta-text" id="scoreMeta"></div>
+    <p class="score-half-note" id="scoreHalfNote" hidden>項目1〜25のみこのページに表示しています。No.26〜50の全文は「詳細結果をLINEで受け取る」でコピーし、LINEのトークに貼り付けてご覧ください。</p>
     <p class="score-guidance">診断の内容で100点を目指す必要はありません。ただ、80点以上を目指せるようになると、売れるホームページに変わっていきます。</p>
   </div>
 
@@ -691,6 +731,9 @@ const categories = [
   ]}
 ];
 
+/** Web 上では項目 1〜ここまでを表示。それ以降は LINE に貼り付ける全文に含める */
+const WEB_VISIBLE_ITEM_MAX = 25;
+
 let analysisData = null;
 
 /** LINE公式アカウントの「友だち追加」URL（LINEビジネスIDマネージャー → ホームで確認） */
@@ -776,6 +819,7 @@ function renderResults(data) {
   else { gradeEl.textContent = '要改善 - 優先的に対策しましょう'; gradeEl.style.background = '#fef2f2'; gradeEl.style.color = '#dc2626'; }
 
   document.getElementById('scoreMeta').textContent = `${autoCount}項目を自動判定${manualCount > 0 ? ` / ${manualCount}項目は目視確認が必要` : ''}`;
+  document.getElementById('scoreHalfNote').hidden = false;
 
   // Category summary cards
   const sumContainer = document.getElementById('catSummary');
@@ -804,10 +848,14 @@ function renderResults(data) {
     sumContainer.appendChild(card);
   });
 
-  // Detail cards
+  // Detail cards（1〜WEB_VISIBLE_ITEM_MAX のみ表示。以降は LINE 全文用）
   const main = document.getElementById('main');
   main.innerHTML = '';
   categories.forEach((cat, idx) => {
+    const visibleItems = cat.items.filter(item => item.num <= WEB_VISIBLE_ITEM_MAX);
+    const hiddenItems = cat.items.filter(item => item.num > WEB_VISIBLE_ITEM_MAX);
+    if (visibleItems.length === 0 && hiddenItems.length === 0) return;
+
     const section = document.createElement('div');
     section.className = 'category';
     section.id = 'cat-' + idx;
@@ -826,7 +874,7 @@ function renderResults(data) {
       </div>
     `;
 
-    cat.items.forEach(item => {
+    function appendItemCard(item) {
       const result = data.items.find(i => i.num === item.num);
       const score = result ? result.score : null;
       const detail = result ? result.detail : '';
@@ -854,9 +902,41 @@ function renderResults(data) {
         </div>
       `;
       section.appendChild(card);
-    });
+    }
+
+    visibleItems.forEach(appendItemCard);
+
+    if (hiddenItems.length > 0) {
+      const lo = Math.min(...hiddenItems.map(i => i.num));
+      const hi = Math.max(...hiddenItems.map(i => i.num));
+      const hint = document.createElement('div');
+      hint.className = 'item-card line-locked-hint';
+      hint.innerHTML = `
+        <div class="item-main">
+          <div class="item-status-icon manual">\u2026</div>
+          <div class="item-body">
+            <div class="item-num-q">
+              <span class="item-num">${lo}\uFF5E${hi}</span>
+              <span class="item-question">\u3053\u306E\u30AB\u30C6\u30B4\u30EA\u306E\u6B8B\u308A${hiddenItems.length}\u9805\u76EE\uFF08Web\u4E0A\u306F\u975E\u8868\u793A\uFF09</span>
+            </div>
+            <div class="item-detail manual">\u4E0B\u306E\u300C\u8A73\u7D30\u7D50\u679C\u3092LINE\u3067\u53D7\u3051\u53D6\u308B\u300D\u3092\u62BC\u3059\u3068\u300150\u9805\u76EE\u5168\u6587\u304C\u30B3\u30D4\u30FC\u3055\u308C\u307E\u3059\u3002LINE\u306E\u30C8\u30FC\u30AF\u306B\u8CBC\u308A\u4ED8\u3051\u308C\u3070\u3001No.${lo}\uFF5E${hi}\u3082\u542B\u3081\u3066\u3059\u3079\u3066\u3054\u78BA\u8A8D\u3044\u305F\u3060\u3051\u307E\u3059\u3002</div>
+          </div>
+        </div>`;
+      section.appendChild(hint);
+    }
+
     main.appendChild(section);
   });
+
+  const teaser = document.createElement('div');
+  teaser.className = 'line-full-teaser';
+  teaser.id = 'line-full-teaser';
+  teaser.innerHTML = `
+    <h3>No.${WEB_VISIBLE_ITEM_MAX + 1}\uFF5E50 \u306E\u8A73\u7D30\u306F LINE \u3067\u5168\u6587\u3092</h3>
+    <p>\u3053\u306E\u30DA\u30FC\u30B8\u3067\u306F\u5148\u306E${WEB_VISIBLE_ITEM_MAX}\u9805\u76EE\u307E\u3067\u3092\u8868\u793A\u3057\u3066\u3044\u307E\u3059\u3002\u6B8B\u308A\u306E\u9805\u76EE\u3092\u542B\u3080<strong>50\u9805\u76EE\u3059\u3079\u3066\u306E\u6587\u7AE0</strong>\u306F\u3001\u4E0B\u306E\u30DC\u30BF\u30F3\u3067\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u306B\u30B3\u30D4\u30FC\u3057\u3001LINE\u306E\u30C8\u30FC\u30AF\u306B\u8CBC\u308A\u4ED8\u3051\u3066\u304A\u9001\u308A\u304F\u3060\u3055\u3044\u3002</p>
+    <button type="button" class="btn btn-line" onclick="openLineAddFriend()">\u8A73\u7D30\u7D50\u679C\u3092LINE\u3067\u53D7\u3051\u53D6\u308B\uFF08\u5168\u6587\u30B3\u30D4\u30FC\uFF09</button>
+  `;
+  main.appendChild(teaser);
 }
 
 function toggleNote(btn) {
@@ -906,6 +986,24 @@ function showResult() {
 function closeModal() { document.getElementById('resultModal').classList.remove('open'); }
 document.getElementById('resultModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 
+function lineScoreMark(score) {
+  if (score === 2) return '\u25CB';
+  if (score === 1) return '\u25B3';
+  if (score === 0) return '\u00D7';
+  return '\u672A\u5224\u5B9A';
+}
+
+function appendDetailLinesForLine(lines, detail) {
+  if (!detail) return;
+  String(detail)
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .forEach(line => {
+      const t = line.trim();
+      if (t) lines.push(`   ${t}`);
+    });
+}
+
 function buildLineHandoffText() {
   if (!analysisData) return '';
   const url = document.getElementById('urlInput').value.trim() || '(未入力)';
@@ -914,14 +1012,31 @@ function buildLineHandoffText() {
   analysisData.items.forEach(i => { if (i.score !== null) total += i.score; else manual++; });
   const today = new Date().toISOString().split('T')[0];
   const lines = [
-    '【即効ホームページ診断・詳細レポート希望】',
-    `診断日: ${today}`,
-    `対象URL: ${url}`,
-    `合計スコア: ${total} / 100`,
-    manual > 0 ? `※自動判定外: ${manual}項目（目視確認項目あり）` : null,
+    '\u3010\u5373\u52B9\u30DB\u30FC\u30E0\u30DA\u30FC\u30B8\u8A3A\u65AD\u30FB\u8A73\u7D30\u30EC\u30DD\u30FC\u30C8\u5E0C\u671B\u3011',
+    `\u8A3A\u65AD\u65E5: ${today}`,
+    `\u5BFE\u8C61URL: ${url}`,
+    `\u5408\u8A08\u30B9\u30B3\u30A2: ${total} / 100`,
+    manual > 0 ? `\u203B\u81EA\u52D5\u5224\u5B9A\u5916: ${manual}\u9805\u76EE\uff08\u76EE\u8996\u78BA\u8A8D\u9805\u76EE\u3042\u308a\uff09` : null,
     '',
-    '上記URLの詳しい診断結果のご送付をお願いします。',
+    '\u4E0B\u8A18\u306F\u9805\u76EE1\uFF5E50\u306E\u5168\u6587\u3067\u3059\u3002\u305D\u306E\u307E\u307E1\u901A\u3067\u9001\u4FE1\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+    '',
+    '\u2500\u2500\u2500\u2500\u2500\u9805\u76EE\u5225\u8A73\u7D30\u2500\u2500\u2500\u2500\u2500',
+    '',
   ].filter(Boolean);
+
+  categories.forEach(cat => {
+    lines.push(`\u25A0 ${cat.name}`);
+    cat.items.forEach(item => {
+      const r = analysisData.items.find(i => i.num === item.num);
+      const s = r ? r.score : null;
+      const d = r ? r.detail : '';
+      lines.push(`${item.num}. [${lineScoreMark(s)}] ${item.q}`);
+      appendDetailLinesForLine(lines, d);
+    });
+    lines.push('');
+  });
+
+  lines.push(`\u5408\u8A08\u30B9\u30B3\u30A2: ${total} / 100`);
   return lines.join('\n');
 }
 
@@ -942,33 +1057,6 @@ function showLineToast(message, ok) {
   }, 4200);
 }
 
-function exportCSV() {
-  if (!analysisData) return;
-  const url = document.getElementById('urlInput').value;
-  const today = new Date().toISOString().split('T')[0];
-  let csv = '\uFEFF\u5373\u52B9\u30DB\u30FC\u30E0\u30DA\u30FC\u30B8\u8A3A\u65AD\n';
-  csv += `\u5BFE\u8C61URL,${url}\n\u8A3A\u65AD\u65E5,${today}\n\nNo,\u30AB\u30C6\u30B4\u30EA\u30FC,\u9805\u76EE,\u8A55\u4FA1,\u5206\u6790\u7D50\u679C\n`;
-  categories.forEach(cat => {
-    cat.items.forEach(item => {
-      const r = analysisData.items.find(i => i.num === item.num);
-      const s = r ? r.score : null;
-      const ev = s === 2 ? '\u25CB' : s === 1 ? '\u25B3' : s === 0 ? '\u00D7' : '\u672A\u5224\u5B9A';
-      const d = (r ? r.detail : '').replace(/"/g, '""');
-      csv += `${item.num},"${cat.name}","${item.q}",${ev},"${d}"\n`;
-    });
-  });
-  let t = 0;
-  analysisData.items.forEach(i => { if (i.score !== null) t += i.score; });
-  csv += `\n\u5408\u8A08,${t},/ 100\n`;
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = href;
-  a.download = `HP\u8A3A\u65AD_${today}.csv`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(href), 2000);
-}
-
 async function openLineAddFriend() {
   if (!analysisData) return;
   const urlNotSet = LINE_ADD_FRIEND_URL.includes('YOUR_BASIC_ID');
@@ -978,8 +1066,6 @@ async function openLineAddFriend() {
     showLineToast('友だち追加URLが未設定です。サイト管理者にご連絡ください。', false);
     return;
   }
-
-  exportCSV();
 
   const text = buildLineHandoffText();
   let copied = false;
@@ -993,9 +1079,9 @@ async function openLineAddFriend() {
   window.open(LINE_ADD_FRIEND_URL, '_blank', 'noopener,noreferrer');
 
   if (copied) {
-    showLineToast('CSVをダウンロードしました。概要をコピーしました。LINEで友だち追加し、トークに貼り付けて送信してください。', true);
+    showLineToast('診断全文をコピーしました。LINEで友だち追加し、トークに長押しで貼り付けて送信してください。', true);
   } else {
-    showLineToast('CSVをダウンロードしました。LINEを開きました。トークには手入力でURLとスコアを送ってください。', false);
+    showLineToast('LINEを開きました。コピーに失敗した場合は、もう一度ボタンを押すか内容を手入力してください。', false);
   }
 }
 </script>
