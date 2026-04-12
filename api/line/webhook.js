@@ -1,41 +1,148 @@
-'use strict';
-
 /**
- * LINE Messaging API Webhook（友だち追加 = follow イベント）
- * コンソールの Webhook URL: https://<ドメイン>/api/line/webhook
+ * LINE Messaging API Webhook（Vercel Edge）
+ *
+ * Vercel の Node サーバーレスは application/json を先にパースすることがあり、
+ * 生ボディでないと X-Line-Signature の検証が一致せず 401 になり Push が届かない。
+ * Edge では request.text() でそのまま検証できる。
  *
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
- * follow 時は Push API で送信（あいさつメッセージと別の2通目として届きやすい）
- * 任意: LINE_LINK_TOKEN_SECRET（未設定時は CHANNEL_SECRET を署名鍵に使用）
+ * 任意: LINE_LINK_TOKEN_SECRET（未設定時は CHANNEL_SECRET）
  */
 
-const getRawBody = require('raw-body');
-const { handleLineWebhook } = require('../../lib/lineWebhookCore');
+export const config = { runtime: 'edge' };
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    res.statusCode = 405;
-    res.end('Method Not Allowed');
-    return;
-  }
+function bytesToBase64Url(u8) {
+  let bin = '';
+  u8.forEach((b) => {
+    bin += String.fromCharCode(b);
+  });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 
-  let buf;
+function base64DecodeToUint8Array(b64) {
+  const normalized = b64.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+  const str = atob(normalized + pad);
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) out[i] = str.charCodeAt(i);
+  return out;
+}
+
+async function verifyLineSignature(rawBody, signatureHeader, channelSecret) {
+  if (!signatureHeader || !channelSecret || rawBody == null) return false;
+  let expected;
   try {
-    buf = await getRawBody(req, {
-      length: req.headers['content-length'],
-      limit: '256kb',
-      encoding: false,
-    });
-  } catch (e) {
-    res.statusCode = 400;
-    res.end('Bad Request');
-    return;
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(channelSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+    expected = new Uint8Array(sig);
+  } catch {
+    return false;
+  }
+  let actual;
+  try {
+    actual = base64DecodeToUint8Array(signatureHeader.trim());
+  } catch {
+    return false;
+  }
+  if (actual.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
+  return diff === 0;
+}
+
+async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1000) {
+  const exp = Date.now() + ttlMs;
+  const payload = JSON.stringify({ u: userId, exp });
+  const payloadB64 = bytesToBase64Url(new TextEncoder().encode(payload));
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sigBytes = await crypto.subtle.sign('HMAC', key, enc.encode(payloadB64));
+  const sigB64url = bytesToBase64Url(sigBytes);
+  return `${payloadB64}.${sigB64url}`;
+}
+
+export default async function handler(request) {
+  if (request.method === 'GET') {
+    return new Response(
+      'OK: LINE Webhook (POST only). Set this URL in LINE Developers → Messaging API → Webhook.',
+      { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
+    );
   }
 
-  const signature = req.headers['x-line-signature'];
-  const result = await handleLineWebhook(buf, signature, process.env);
+  if (request.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
 
-  res.statusCode = result.status;
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.end(typeof result.body === 'string' ? result.body : 'OK');
-};
+  const rawBody = await request.text();
+  const signature = request.headers.get('x-line-signature');
+  const channelSecret = process.env.LINE_CHANNEL_SECRET;
+  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  const liffId = process.env.LINE_LIFF_ID;
+  const linkSecret = process.env.LINE_LINK_TOKEN_SECRET || channelSecret;
+
+  if (!channelSecret) {
+    return new Response('OK', { status: 200 });
+  }
+
+  const valid = await verifyLineSignature(rawBody, signature, channelSecret);
+  if (!valid) {
+    return new Response('Invalid signature', { status: 401 });
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  const events = body.events || [];
+  for (const event of events) {
+    if (event.type !== 'follow') continue;
+    const userId = event.source && event.source.userId;
+    if (!userId || !accessToken) continue;
+
+    let text;
+    if (liffId && linkSecret) {
+      const token = await createDedicatedToken(userId, linkSecret);
+      const url = `https://liff.line.me/${liffId}?liff.state=${encodeURIComponent(token)}`;
+      text =
+        '【診断レポート用】\n' +
+        '下のURLはあなた専用です。LINEアプリ内でタップして開いてください。\n\n' +
+        url;
+    } else {
+      text =
+        '（管理者向け: Vercel に LINE_LIFF_ID / LINE_CHANNEL_ACCESS_TOKEN を設定してください）';
+    }
+
+    const res = await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        to: userId,
+        messages: [{ type: 'text', text }],
+      }),
+    });
+    if (!res.ok) {
+      console.error('[line webhook] push failed', res.status, await res.text());
+    }
+  }
+
+  return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
