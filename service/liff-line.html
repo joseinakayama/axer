@@ -68,41 +68,16 @@
       color: rgba(248,250,252,0.5);
       line-height: 1.6;
     }
-    .diag-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .diag-row {
-      padding: 12px 14px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .diag-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-    .diag-num { font-weight: 800; font-size: 0.85rem; color: #94a3b8; min-width: 1.5rem; }
-    .diag-cat {
-      font-size: 0.72rem;
-      padding: 2px 8px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.08);
-    }
-    .diag-sym { margin-left: auto; font-weight: 800; font-size: 1rem; }
-    .sc-good { color: #4ade80; }
-    .sc-warn { color: #fbbf24; }
-    .sc-bad { color: #f87171; }
-    .sc-manual { color: #94a3b8; }
-    .diag-q { font-size: 0.88rem; font-weight: 600; color: #f1f5f9; }
-    .diag-detail {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      color: rgba(248,250,252,0.65);
-      white-space: pre-wrap;
-      word-break: break-word;
+    .diag-csv-lead {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: rgba(248,250,252,0.78);
+      line-height: 1.6;
     }
     .hint-storage { margin-top: 10px; }
   </style>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    /** LINE Developers → LIFF アプリの LIFF ID（数字-英小文字）に差し替え */
-    const LIFF_ID = '2009774828-fLas1Ciw';
-  </script>
+  <script src="line-liff-config.js"></script>
   <script src="diagnosis-item-labels.js"></script>
 </head>
 <body>
@@ -116,6 +91,8 @@
     (function () {
       const out = document.getElementById('out');
       const AXER_DIAG_STORAGE_KEY = 'axer_diagnosis_v1';
+      const LIFF_ID =
+        typeof window.AXER_LIFF_ID === 'string' ? window.AXER_LIFF_ID.trim() : '';
 
       function escapeHtml(s) {
         const d = document.createElement('div');
@@ -149,18 +126,6 @@
         return map;
       }
 
-      function safeColor(hex) {
-        if (typeof hex !== 'string') return '#64748b';
-        return /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#64748b';
-      }
-
-      function scoreSymbol(score) {
-        if (score === null || score === undefined) return '?';
-        if (score === 2) return '\u2713';
-        if (score === 1) return '!';
-        return '\u2715';
-      }
-
       function scoreLabel(score) {
         if (score === null || score === undefined) return '\u624b\u52d5\u78ba\u8a8d';
         if (score === 2) return '\u826f\u597d';
@@ -181,9 +146,16 @@
         return s;
       }
 
-      function buildDiagnosisCsv(diag, categories) {
+      /** \u305d\u306e\u4eba\u5c02\u7528\u30ec\u30dd\u30fc\u30c8\uff08\u8868\u793a\u540d\u3092CSV\u5148\u982d\u3068\u30d5\u30a1\u30a4\u30eb\u540d\u306b\u53cd\u6620\uff09 */
+      function buildPersonalDiagnosisCsv(diag, categories, viewerDisplayName) {
         const meta = numToMeta(categories);
-        const rows = [['No', '\u30ab\u30c6\u30b4\u30ea', '\u8a2d\u554f', '\u30b9\u30b3\u30a2(0-2)', '\u5224\u5b9a', '\u8a73\u7d30']];
+        const nameRow = viewerDisplayName && String(viewerDisplayName).trim() ? String(viewerDisplayName).trim() : '\uff08\u672a\u767b\u9332\uff09';
+        const rows = [];
+        rows.push(['\u30db\u30fc\u30e0\u30da\u30fc\u30b8\u8a3a\u65ad\u30ec\u30dd\u30fc\u30c8\uff08\u5c02\u7528\u30ea\u30f3\u30af\u78ba\u8a8d\u6e08\u307f\uff09', '']);
+        rows.push(['\u5bfe\u8c61\uff08LINE\u8868\u793a\u540d\uff09', nameRow]);
+        rows.push(['CSV\u51fa\u529b\u65e5\u6642', new Date().toISOString()]);
+        rows.push([]);
+        rows.push(['No', '\u30ab\u30c6\u30b4\u30ea', '\u8a2d\u554f', '\u30b9\u30b3\u30a2(0-2)', '\u5224\u5b9a', '\u8a73\u7d30']);
         const sorted = diag.items.slice().sort(function (a, b) {
           return a.num - b.num;
         });
@@ -202,7 +174,7 @@
         rows.push(['\u8a3a\u65adURL', diag.url || '']);
         rows.push(['\u5408\u8a08\u70b9', diag.totalScore != null ? diag.totalScore : '']);
         rows.push([
-          '\u4fdd\u5b58\u65e5\u6642',
+          '\u8a3a\u65ad\u7d50\u679c\u4fdd\u5b58\u65e5\u6642',
           diag.savedAt ? new Date(diag.savedAt).toISOString() : '',
         ]);
         return rows
@@ -212,8 +184,24 @@
           .join('\r\n');
       }
 
-      function renderDiagnosisBlock(diag, categories) {
-        const meta = numToMeta(categories);
+      function slugForFilename(name) {
+        const s = String(name || '')
+          .trim()
+          .replace(/[\s\u3000]+/g, '_')
+          .replace(/[\\/:*?"<>|#\u0000-\u001f]/g, '')
+          .slice(0, 40);
+        return s || 'guest';
+      }
+
+      function personalCsvBasename(diag, viewerDisplayName) {
+        const host = (diag.url || '')
+          .replace(/^https?:\/\//, '')
+          .split('/')[0]
+          .replace(/[^a-z0-9.-]/gi, '_') || 'site';
+        return 'axer-shindan-tokutei-' + slugForFilename(viewerDisplayName) + '-' + host;
+      }
+
+      function renderDiagnosisBlock(diag, categories, viewerDisplayName) {
         let total = diag.totalScore;
         if (total == null) {
           total = 0;
@@ -222,43 +210,8 @@
           });
         }
         const grade = diagnosisGradeText(total);
-        const sorted = diag.items.slice().sort(function (a, b) {
-          return a.num - b.num;
-        });
-        let itemsHtml = '';
-        sorted.forEach(function (i) {
-          const m = meta[i.num] || {};
-          const sym = scoreSymbol(i.score);
-          const cat = escapeHtml(m.category || '\u2014');
-          const q = escapeHtml(m.q || '');
-          const det = escapeHtml(i.detail || '');
-          const col = safeColor(m.color);
-          const scoreClass =
-            i.score === 2 ? 'sc-good' : i.score === 1 ? 'sc-warn' : i.score === null ? 'sc-manual' : 'sc-bad';
-          itemsHtml +=
-            '<div class="diag-row">' +
-            '<div class="diag-row-top">' +
-            '<span class="diag-num">' +
-            i.num +
-            '</span>' +
-            '<span class="diag-cat" style="border-left:3px solid ' +
-            col +
-            '">' +
-            cat +
-            '</span>' +
-            '<span class="diag-sym ' +
-            scoreClass +
-            '">' +
-            sym +
-            '</span>' +
-            '</div>' +
-            '<div class="diag-q">' +
-            q +
-            '</div>' +
-            (det ? '<div class="diag-detail">' + det + '</div>' : '') +
-            '</div>';
-        });
         const urlEsc = diag.url ? escapeHtml(diag.url) : '\u2014';
+        const who = viewerDisplayName && String(viewerDisplayName).trim() ? escapeHtml(viewerDisplayName.trim()) : '\u304a\u5ba2\u69d8';
         return (
           '<div class="diag-summary">' +
           '<p class="diag-url"><strong>URL</strong> ' +
@@ -279,12 +232,30 @@
               '</p>'
             : '') +
           '</div>' +
-          '<button type="button" class="csv-btn" id="axerCsvBtn">CSV\u3092\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9</button>' +
-          '<p class="diag-note">\u203biPhone\u306eSafari\u3067\u8a3a\u65ad\u3057LINE\u30a2\u30d7\u30ea\u5185\u3067\u3053\u306e\u30da\u30fc\u30b8\u3092\u958b\u3044\u305f\u5834\u5408\u3001\u30d6\u30e9\u30a6\u30b6\u306e\u4fdd\u5b58\u9818\u57df\u304c\u5171\u6709\u3055\u308c\u305a\u7d50\u679c\u304c\u8868\u793a\u3055\u308c\u306a\u3044\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u3002\u540c\u3058LINE\u5185\u30d6\u30e9\u30a6\u30b6\u304b\u3089 <a href="/service/diagnosis.html">\u8a3a\u65ad\u30da\u30fc\u30b8</a> \u3092\u5b9f\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>' +
-          '<div class="diag-list">' +
-          itemsHtml +
-          '</div>'
+          '<p class="diag-csv-lead">' +
+          who +
+          ' \u69d8\u5411\u3051\u306e<strong>\u516850\u9805\u76ee</strong>\u3092\u3001CSV\u30d5\u30a1\u30a4\u30eb1\u3064\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3067\u304d\u307e\u3059\uff08Excel\u5bfe\u5fdc\u306eUTF-8\uff09\u3002</p>' +
+          '<button type="button" class="csv-btn" id="axerCsvBtn">\u5c02\u7528\u8a3a\u65ad\u30ec\u30dd\u30fc\u30c8\uff08CSV\uff09\u3092\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9</button>' +
+          '<p class="diag-note">\u203bCSV\u5148\u982d\u306bLINE\u8868\u793a\u540d\u3068\u51fa\u529b\u65e5\u6642\u304c\u8a18\u9332\u3055\u308c\u307e\u3059\u3002iPhone\u306eSafari\u3068LINE\u5185\u30d6\u30e9\u30a6\u30b6\u3067\u8a3a\u65ad\u3092\u5206\u3051\u305f\u5834\u5408\u306f\u3001\u7d50\u679c\u304c\u51fa\u306a\u3044\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u3002\u540c\u3058LINE\u5185\u304b\u3089 <a href="/service/diagnosis.html">\u8a3a\u65ad\u30da\u30fc\u30b8</a> \u3092\u5b9f\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>'
         );
+      }
+
+      function resolveDiagnosisPayload(data) {
+        const fromServer =
+          data.diagnosis &&
+          typeof data.diagnosis === 'object' &&
+          Array.isArray(data.diagnosis.items) &&
+          data.diagnosis.items.length > 0
+            ? data.diagnosis
+            : null;
+        const fromLocal = loadStoredDiagnosis();
+        const diag = fromServer || fromLocal;
+        if (fromServer) {
+          try {
+            localStorage.setItem(AXER_DIAG_STORAGE_KEY, JSON.stringify(fromServer));
+          } catch (e) {}
+        }
+        return diag;
       }
 
       function showVerifiedSuccess(data) {
@@ -292,16 +263,17 @@
           ? '<img class="avatar" src="' + data.picture.replace(/"/g, '') + '" alt="">'
           : '';
         const name = data.displayName ? data.displayName : '\u304a\u5ba2\u69d8';
-        const diag = loadStoredDiagnosis();
+        const diag = resolveDiagnosisPayload(data);
         const cats = window.AXER_DIAG_CATEGORIES || [];
         let reportHtml;
         if (diag && diag.items && diag.items.length > 0) {
-          reportHtml = '<div class="diag-report">' + renderDiagnosisBlock(diag, cats) + '</div>';
+          reportHtml =
+            '<div class="diag-report">' + renderDiagnosisBlock(diag, cats, name) + '</div>';
         } else {
           reportHtml =
             '<div class="diag-report diag-report-empty">' +
-            '<p class="status wait" style="text-align:left">\u8a3a\u65ad\u7d50\u679c\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002\u307e\u305a <a href="/service/diagnosis.html">\u30db\u30fc\u30e0\u30da\u30fc\u30b8\u8a3a\u65ad</a> \u3092<strong>\u540c\u3058\u30d6\u30e9\u30a6\u30b6\uff08\u540c\u3058\u7aef\u672b\uff09</strong>\u3067\u5b9f\u884c\u3057\u3001\u5206\u6790\u304c\u7d42\u308f\u3063\u305f\u3042\u3068\u306b\u3082\u3046\u4e00\u5ea6\u3053\u306e\u30da\u30fc\u30b8\u3092\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002</p>' +
-            '<p class="sub hint-storage">\u203bSafari\u3067\u8a3a\u65ad\u3057\u3066LINE\u30a2\u30d7\u30ea\u5185\u306e\u30d6\u30e9\u30a6\u30b6\u3060\u3051\u958b\u3044\u305f\u5834\u5408\u306a\u3069\u3001\u4fdd\u5b58\u304c\u5171\u6709\u3055\u308c\u306a\u3044\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u3002\u305d\u306e\u3068\u304d\u306fLINE\u5185\u306e\u30d6\u30e9\u30a6\u30b6\u304b\u3089\u8a3a\u65ad\u30da\u30fc\u30b8\u3092\u958b\u304d\u76f4\u3057\u3066\u5b9f\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>' +
+            '<p class="status wait" style="text-align:left">\u8a3a\u65ad\u7d50\u679c\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002<strong>LINE\u306e\u30d6\u30e9\u30a6\u30b6</strong>\u3067 <a href="/service/diagnosis.html">\u30db\u30fc\u30e0\u30da\u30fc\u30b8\u8a3a\u65ad</a> \u3092\u958b\u304d\u3001\u5206\u6790\u5b8c\u4e86\u5f8c\u306b\u3082\u3046\u4e00\u5ea6\u3053\u306e\u30da\u30fc\u30b8\u3092\u958b\u3044\u3066\u304f\u3060\u3055\u3044\uff08\u30b5\u30fc\u30d0\u306bKV\u3092\u63a5\u7d9a\u3057\u3066\u3044\u308c\u3070\u3001\u5225\u30d6\u30e9\u30a6\u30b6\u3067\u8a3a\u65ad\u3057\u305f\u7d50\u679c\u3082\u8868\u793a\u3055\u308c\u307e\u3059\uff09\u3002</p>' +
+            '<p class="sub hint-storage">\u203b\u30b5\u30fc\u30d0\u5074\u3067 KV\uff08Vercel / Upstash Redis\uff09\u304c\u672a\u8a2d\u5b9a\u306e\u3068\u304d\u306f\u3001\u540c\u3058\u30d6\u30e9\u30a6\u30b6\u5185\u306e\u4fdd\u5b58\u306e\u307f\u3067\u3059\u3002Safari\u3068LINE\u3067\u8a3a\u65ad\u3092\u5206\u3051\u305f\u5834\u5408\u306f\u3001LINE\u5185\u304b\u3089\u8a3a\u65ad\u3092\u3084\u308a\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>' +
             '</div>';
         }
         show(
@@ -315,17 +287,13 @@
           const btn = document.getElementById('axerCsvBtn');
           if (btn) {
             btn.addEventListener('click', function () {
-              const csv = buildDiagnosisCsv(diag, cats);
+              const csv = buildPersonalDiagnosisCsv(diag, cats, name);
               const bom = '\uFEFF';
               const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
               const a = document.createElement('a');
               const u = URL.createObjectURL(blob);
               a.href = u;
-              const host = (diag.url || '')
-                .replace(/^https?:\/\//, '')
-                .split('/')[0]
-                .replace(/[^a-z0-9.-]/gi, '_') || 'report';
-              a.download = 'axer-diagnosis-' + host + '.csv';
+              a.download = personalCsvBasename(diag, name) + '.csv';
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
@@ -336,7 +304,9 @@
       }
 
       if (!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID') {
-        show('<p class="status err">LIFF_ID が未設定です。service/liff-line.html 内の LIFF_ID を編集してください。</p>');
+        show(
+          '<p class="status err">LIFF ID が未設定です。service/line-liff-config.js の AXER_LIFF_ID を編集してください。</p>'
+        );
         return;
       }
 

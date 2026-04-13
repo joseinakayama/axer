@@ -464,6 +464,8 @@
     font-family: 'Noto Sans JP', sans-serif;
   }
 </style>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="line-liff-config.js"></script>
 </head>
 <body>
 
@@ -676,24 +678,54 @@ const LINE_ADD_FRIEND_URL = 'https://lin.ee/TyDk96Y';
 /** LIFF 専用ページ（liff-line.html）が読み出す診断スナップショット */
 const AXER_DIAG_STORAGE_KEY = 'axer_diagnosis_v1';
 
+function buildDiagnosisSnapshotPayload(data) {
+  if (!data || !Array.isArray(data.items)) return null;
+  return {
+    url: data.url,
+    items: data.items.map((i) => ({
+      num: i.num,
+      score: i.score,
+      detail: i.detail != null ? String(i.detail) : '',
+    })),
+    totalScore: data.totalScore,
+    maxScore: data.maxScore,
+    autoCount: data.autoCount,
+    manualCount: data.manualCount,
+    savedAt: Date.now(),
+  };
+}
+
 function persistDiagnosisForLiff(data) {
   try {
-    if (!data || !Array.isArray(data.items)) return;
-    const payload = {
-      url: data.url,
-      items: data.items.map((i) => ({
-        num: i.num,
-        score: i.score,
-        detail: i.detail != null ? String(i.detail) : '',
-      })),
-      totalScore: data.totalScore,
-      maxScore: data.maxScore,
-      autoCount: data.autoCount,
-      manualCount: data.manualCount,
-      savedAt: Date.now(),
-    };
+    const payload = buildDiagnosisSnapshotPayload(data);
+    if (!payload) return;
     localStorage.setItem(AXER_DIAG_STORAGE_KEY, JSON.stringify(payload));
   } catch (e) {}
+}
+
+/** 診断ページ用 LIFF ID（未設定時は専用ページと同じ ID を試す） */
+function liffIdForDiagnosisPage() {
+  const d = typeof window.AXER_DIAGNOSIS_LIFF_ID === 'string' ? window.AXER_DIAGNOSIS_LIFF_ID.trim() : '';
+  if (d) return d;
+  return typeof window.AXER_LIFF_ID === 'string' ? window.AXER_LIFF_ID.trim() : '';
+}
+
+/** LINE 内で liff.init が成功しログイン済みなら ID トークンを返す（analyze50 へ付与してサーバー KV 保存） */
+async function tryGetLineIdTokenForAnalyze() {
+  if (typeof liff === 'undefined') return '';
+  const lid = liffIdForDiagnosisPage();
+  if (!lid) return '';
+  try {
+    await liff.init({ liffId: lid, withLoginOnExternalBrowser: false });
+  } catch (e) {
+    return '';
+  }
+  if (!liff.isLoggedIn()) return '';
+  try {
+    return liff.getIDToken() || '';
+  } catch (e) {
+    return '';
+  }
 }
 
 async function startAnalysis() {
@@ -710,10 +742,11 @@ async function startAnalysis() {
   btnText.innerHTML = '<span class="spinner"></span>分析中...';
 
   try {
+    const idToken = await tryGetLineIdTokenForAnalyze();
     const res = await fetch('/api/analyze50', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify(idToken ? { url, idToken } : { url }),
     });
     const data = await res.json();
     if (!res.ok) { errorMsg.textContent = data.error || '分析エラー'; return; }

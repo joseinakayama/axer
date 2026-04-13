@@ -1,6 +1,7 @@
 'use strict';
 
 const { runDiagnosis, mapAxiosError } = require('../lib/runDiagnosis');
+const { persistDiagnosisKvAfterAnalyze } = require('../lib/lineSaveDiagnosisHandler');
 
 function parseJsonBody(req) {
   const b = req.body;
@@ -36,10 +37,17 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url } = parseJsonBody(req);
+  const { url, idToken } = parseJsonBody(req);
 
   try {
     const data = await runDiagnosis(url);
+    try {
+      if (idToken) {
+        await persistDiagnosisKvAfterAnalyze(idToken, data, process.env);
+      }
+    } catch (e) {
+      /* KV やトークン周りの失敗は診断レスポンスを阻害しない */
+    }
     return res.status(200).json(data);
   } catch (err) {
     const mapped = mapAxiosError(err);

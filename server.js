@@ -3,6 +3,7 @@ const path = require('path');
 const { runDiagnosis, mapAxiosError } = require('./lib/runDiagnosis');
 const { handleLineWebhook } = require('./lib/lineWebhookCore');
 const { handleVerifyDedicated } = require('./lib/lineVerifyDedicatedHandler');
+const { handleSaveDiagnosis, persistDiagnosisKvAfterAnalyze } = require('./lib/lineSaveDiagnosisHandler');
 
 const app = express();
 const PORT = 3000;
@@ -27,9 +28,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 50項目自動分析エンドポイント
 // ============================
 app.post('/api/analyze50', async (req, res) => {
-  const { url } = req.body;
+  const { url, idToken } = req.body;
   try {
     const data = await runDiagnosis(url);
+    try {
+      if (idToken) {
+        await persistDiagnosisKvAfterAnalyze(idToken, data, process.env);
+      }
+    } catch (e) {}
     res.json(data);
   } catch (err) {
     const mapped = mapAxiosError(err);
@@ -39,6 +45,11 @@ app.post('/api/analyze50', async (req, res) => {
 
 app.post('/api/line/verify-dedicated', async (req, res) => {
   const result = await handleVerifyDedicated(req.body || {}, process.env);
+  res.status(result.status).json(result.json);
+});
+
+app.post('/api/line/save-diagnosis', async (req, res) => {
+  const result = await handleSaveDiagnosis(req.body || {}, process.env);
   res.status(result.status).json(result.json);
 });
 

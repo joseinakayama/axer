@@ -29,12 +29,17 @@
   ],
   "functions": {
     "api/analyze50.js": {
-      "maxDuration": 10
+      "maxDuration": 10,
+      "includeFiles": "lib/**"
     },
     "api/line/webhook.js": {
       "maxDuration": 60
     },
     "api/line/verify-dedicated.js": {
+      "maxDuration": 10,
+      "includeFiles": "lib/**"
+    },
+    "api/line/save-diagnosis.js": {
       "maxDuration": 10,
       "includeFiles": "lib/**"
     }
