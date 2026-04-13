@@ -55,8 +55,11 @@ async function verifyLineSignature(rawBody, signatureHeader, channelSecret) {
 }
 
 async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1000) {
+  const u = String(userId || '')
+    .replace(/\u200b/g, '')
+    .trim();
   const exp = Date.now() + ttlMs;
-  const payload = JSON.stringify({ u: userId, exp });
+  const payload = JSON.stringify({ u, exp });
   const payloadB64 = bytesToBase64Url(new TextEncoder().encode(payload));
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(

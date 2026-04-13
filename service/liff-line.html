@@ -212,11 +212,16 @@
           return;
         }
 
+        let accessToken = '';
+        try {
+          accessToken = liff.getAccessToken() || '';
+        } catch (e) {}
+
         try {
           const res = await fetch('/api/line/verify-dedicated', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken, t: state }),
+            body: JSON.stringify({ idToken, t: state, accessToken }),
           });
           const raw = await res.text();
           let data;
