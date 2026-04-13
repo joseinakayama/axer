@@ -1,32 +1,27 @@
 /**
- * LINE Messaging API Webhook（Vercel Edge）
+ * LINE Messaging API Webhook（Vercel Node.js）
  *
- * Vercel の Node サーバーレスは application/json を先にパースすることがあり、
- * 生ボディでないと X-Line-Signature の検証が一致せず 401 になり Push が届かない。
- * Edge では request.text() でそのまま検証できる。
+ * Edge から api.line.me への fetch がタイムアウトしやすいため Node ランタイムを使用。
+ * Web Request / Response API で生ボディを検証。
  *
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
- * 任意: LINE_LINK_TOKEN_SECRET（未設定時は CHANNEL_SECRET）
  */
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs20.x' };
 
 function bytesToBase64Url(u8) {
   const bytes = u8 instanceof Uint8Array ? u8 : new Uint8Array(u8);
-  let bin = '';
-  for (let i = 0; i < bytes.length; i++) {
-    bin += String.fromCharCode(bytes[i]);
-  }
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return Buffer.from(bytes)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 function base64DecodeToUint8Array(b64) {
-  const normalized = b64.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
-  const str = atob(normalized + pad);
-  const out = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; i++) out[i] = str.charCodeAt(i);
-  return out;
+  let s = b64.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
+  return new Uint8Array(Buffer.from(s + pad, 'base64'));
 }
 
 async function verifyLineSignature(rawBody, signatureHeader, channelSecret) {
@@ -75,7 +70,8 @@ async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1
   return `${payloadB64}.${sigB64url}`;
 }
 
-const LINE_FETCH_TIMEOUT_MS = 8000;
+/** Node から LINE API までの往復に余裕を持たせる（Edge より安定しやすい） */
+const LINE_FETCH_TIMEOUT_MS = 20000;
 
 async function fetchLine(url, init) {
   const ctrl = new AbortController();
@@ -94,10 +90,6 @@ async function fetchLine(url, init) {
   }
 }
 
-/**
- * push は replyToken を使わない。push がダメなときだけ reply。
- * fetch はタイムアウト付き（Edge の 25s 上限で FUNCTION_INVOCATION_FAILED にならないように）。
- */
 async function deliverFollowMessage(accessToken, userId, replyToken, text) {
   const auth = `Bearer ${accessToken.trim()}`;
   const headers = { 'Content-Type': 'application/json', Authorization: auth };

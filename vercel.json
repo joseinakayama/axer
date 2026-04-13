@@ -6,7 +6,7 @@
       "maxDuration": 10
     },
     "api/line/webhook.js": {
-      "maxDuration": 30
+      "maxDuration": 60
     },
     "api/line/verify-dedicated.js": {
       "maxDuration": 10
