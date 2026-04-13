@@ -240,7 +240,18 @@
                 '<p class="sub" style="margin-top:12px">Vercel の Production に <code>LINE_LOGIN_CHANNEL_ID</code>（LINEログインのチャネルID・数値）と <code>LINE_CHANNEL_SECRET</code> が入っているか確認してください。</p>';
             } else if (data.error === 'invalid_id_token') {
               msg +=
-                '<p class="sub" style="margin-top:12px">LIFF で OpenID Connect を有効にし、スコープに <code>openid</code> と <code>profile</code> を付けてください。<code>LINE_LOGIN_CHANNEL_ID</code> は LIFF を作ったチャネルの ID です。</p>';
+                '<p class="sub" style="margin-top:12px">' +
+                escapeHtml(
+                  data.hint ||
+                    'LIFF で OpenID Connect を有効にし、スコープに openid と profile を付けてください。LINE_LOGIN_CHANNEL_ID は LIFF を作った LINEログインのチャネル ID（数値）です。'
+                ) +
+                '</p>';
+              if (data.line_error) {
+                msg +=
+                  '<p class="sub" style="margin-top:10px;font-size:0.78rem;opacity:0.85">LINE: ' +
+                  escapeHtml(String(data.line_error)) +
+                  '</p>';
+              }
             } else if (data.error === 'invalid_or_expired_link_token') {
               msg +=
                 '<p class="sub" style="margin-top:12px">専用リンクの有効期限切れか、改ざんの可能性があります。ブロック解除後に再度友だち追加し、新しいメッセージのURLから開いてください。</p>';
@@ -249,9 +260,15 @@
                 '<p class="sub" style="margin-top:12px">' +
                 escapeHtml(
                   data.hint ||
-                    '友だち追加時のユーザーIDと、LINEログインのユーザーIDが一致していません。LINE Developers で Messaging API と LINEログインのチャネル連携（同一ユーザID）を確認してください。'
+                    '友だち追加時のユーザーIDと、LINEログインのユーザーIDが一致していません。LINE Developers で公式アカウントの紐付けを確認してください。'
                 ) +
                 '</p>';
+              if (data.line_error) {
+                msg +=
+                  '<p class="sub" style="margin-top:10px;font-size:0.78rem;opacity:0.85">LINE: ' +
+                  escapeHtml(String(data.line_error)) +
+                  '</p>';
+              }
             }
             show(msg);
             return;
