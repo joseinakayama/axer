@@ -1,16 +1,13 @@
 /**
  * LIFF から呼び出し: idToken と liff.state（専用トークン）の突合
- * Web 標準 fetch ハンドラ（default の (req,res) 関数は環境によってはルート未登録になり 404 になり得る）
+ * CommonJS + require で lib を解決（Vercel が api 外の lib をバンドルしやすい）
  */
 
-import { createRequire } from 'node:module';
+'use strict';
 
-const require = createRequire(import.meta.url);
 const { handleVerifyDedicated } = require('../../lib/lineVerifyDedicatedHandler.js');
 
-export const config = { runtime: 'nodejs' };
-
-export default {
+const handler = {
   async fetch(request) {
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -24,10 +21,13 @@ export default {
     }
 
     if (request.method !== 'POST') {
-      return Response.json({ ok: false, error: 'method_not_allowed' }, {
-        status: 405,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      });
+      return Response.json(
+        { ok: false, error: 'method_not_allowed' },
+        {
+          status: 405,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        }
+      );
     }
 
     let body;
@@ -44,3 +44,7 @@ export default {
     });
   },
 };
+
+handler.config = { runtime: 'nodejs' };
+
+module.exports = handler;
