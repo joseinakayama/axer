@@ -2,7 +2,7 @@
 window.AXER_LIFF_ID = '2009774828-fLas1Ciw';
 
 /**
- * 任意: diagnosis.html を Endpoint URL にした「別の LIFF アプリ」の ID。
- * 空のままだと診断ページでは AXER_LIFF_ID で liff.init を試す（Endpoint が違うと失敗し、サーバー保存されない）。
+ * 推奨: diagnosis.html を Endpoint URL にした「別の LIFF アプリ」の ID。
+ * 1回診断フロー（診断後にLINEで専用CSVを受け取る）を安定させるため、必ず設定してください。
  */
-window.AXER_DIAGNOSIS_LIFF_ID = '';
+window.AXER_DIAGNOSIS_LIFF_ID = '2009774828-fLas1Ciw';

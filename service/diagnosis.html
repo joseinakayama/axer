@@ -597,7 +597,7 @@
     </div>
     <div class="score-grade" id="scoreGrade"></div>
     <div class="score-meta-text" id="scoreMeta"></div>
-    <p class="score-half-note" id="scoreHalfNote" hidden>項目1〜25のみこのページに表示しています。No.26〜50の全文は「詳細結果をLINEで受け取る」でコピーし、LINEのトークに貼り付けてご覧ください。</p>
+    <p class="score-half-note" id="scoreHalfNote" hidden>項目1〜25のみこのページに表示しています。No.26〜50を含む全50項目は「LINEで専用CSVを受け取る」から専用ページでダウンロードできます。</p>
     <p class="score-guidance">診断の内容で100点を目指す必要はありません。ただ、80点以上を目指せるようになると、売れるホームページに変わっていきます。</p>
   </div>
 
@@ -610,9 +610,9 @@
 
 <div class="footer-actions" id="footerActions">
   <button class="btn btn-primary" onclick="showResult()">診断結果を見る</button>
-  <button type="button" class="btn btn-line" onclick="openLineAddFriend()" aria-label="LINEで詳しい診断結果を受け取る">
+  <button type="button" class="btn btn-line" onclick="openLineAddFriend()" aria-label="LINEで専用CSVを受け取る">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.41-.104-.534-.294l-2.123-3.981-.015 3.896c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .385.104.516.286l2.125 4.015.01-4.288c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.084.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-    詳細結果をLINEで受け取る
+    LINEで専用CSVを受け取る
   </button>
 </div>
 
@@ -691,6 +691,8 @@ const LINE_ADD_FRIEND_URL = 'https://lin.ee/TyDk96Y';
 
 /** LIFF 専用ページ（liff-line.html）が読み出す診断スナップショット */
 const AXER_DIAG_STORAGE_KEY = 'axer_diagnosis_v1';
+const AXER_LINE_CONTINUE_SAVE_KEY = 'axer_line_continue_save_v1';
+const AXER_LINE_CONTINUE_DIAG_KEY = 'axer_line_continue_diag_v1';
 
 function buildDiagnosisSnapshotPayload(data) {
   if (!data || !Array.isArray(data.items)) return null;
@@ -715,6 +717,31 @@ function persistDiagnosisForLiff(data) {
     if (!payload) return;
     localStorage.setItem(AXER_DIAG_STORAGE_KEY, JSON.stringify(payload));
   } catch (e) {}
+}
+
+function persistDiagnosisForContinueFlow(data) {
+  try {
+    const payload = buildDiagnosisSnapshotPayload(data);
+    if (!payload) return;
+    localStorage.setItem(AXER_LINE_CONTINUE_DIAG_KEY, JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function restoreDiagnosisForContinueFlow() {
+  try {
+    const raw = localStorage.getItem(AXER_LINE_CONTINUE_DIAG_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (!p || !Array.isArray(p.items) || p.items.length === 0) return null;
+    return p;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearLineContinueFlags() {
+  try { localStorage.removeItem(AXER_LINE_CONTINUE_SAVE_KEY); } catch (e) {}
+  try { localStorage.removeItem(AXER_LINE_CONTINUE_DIAG_KEY); } catch (e) {}
 }
 
 function isAxerLiffFlowFromDedicated() {
@@ -754,6 +781,85 @@ async function tryGetLineIdTokenForAnalyze() {
   } catch (e) {
     return '';
   }
+}
+
+function isLineContinueLoginFlow() {
+  try {
+    return new URLSearchParams(window.location.search).get('axer_line_continue') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+async function trySaveDiagnosisSnapshotToServer(allowLoginRedirect) {
+  const payload = buildDiagnosisSnapshotPayload(analysisData);
+  if (!payload) return { ok: false, reason: 'no_analysis' };
+  if (typeof liff === 'undefined') return { ok: false, reason: 'liff_unavailable' };
+  const lid = liffIdForDiagnosisPage();
+  if (!lid) return { ok: false, reason: 'liff_id_missing' };
+
+  try {
+    await liff.init({ liffId: lid, withLoginOnExternalBrowser: true });
+  } catch (e) {
+    return { ok: false, reason: 'liff_init_failed' };
+  }
+
+  if (!liff.isLoggedIn()) {
+    if (!allowLoginRedirect) return { ok: false, reason: 'not_logged_in' };
+    try {
+      localStorage.setItem(AXER_LINE_CONTINUE_SAVE_KEY, '1');
+      persistDiagnosisForContinueFlow(analysisData);
+    } catch (e) {}
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set('axer_line_continue', '1');
+      liff.login({ redirectUri: u.toString() });
+      return { ok: false, reason: 'login_redirect' };
+    } catch (e) {
+      return { ok: false, reason: 'login_failed' };
+    }
+  }
+
+  let idToken = '';
+  try {
+    idToken = liff.getIDToken() || '';
+  } catch (e) {}
+  if (!idToken) return { ok: false, reason: 'id_token_missing' };
+
+  try {
+    const res = await fetch('/api/line/save-diagnosis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, diagnosis: payload }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) return { ok: false, reason: j.error || 'save_failed' };
+    return { ok: true, saved: !!j.saved, reason: j.reason || '' };
+  } catch (e) {
+    return { ok: false, reason: 'network_error' };
+  }
+}
+
+async function handleLineContinueAfterLoginIfNeeded() {
+  if (!isLineContinueLoginFlow()) return;
+  const snapshot = restoreDiagnosisForContinueFlow();
+  if (!analysisData && snapshot) {
+    analysisData = snapshot;
+    document.getElementById('hero').classList.add('compact');
+    document.getElementById('resultsSection').classList.add('visible');
+    document.getElementById('footerActions').classList.add('visible');
+    renderResults(snapshot);
+    showAxerLiffReturnHintIfNeeded();
+  }
+  await trySaveDiagnosisSnapshotToServer(false);
+  clearLineContinueFlags();
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.delete('axer_line_continue');
+    history.replaceState(null, '', u.pathname + (u.search ? u.search : '') + u.hash);
+  } catch (e) {}
+  if (LINE_ADD_FRIEND_URL.includes('YOUR_BASIC_ID')) return;
+  window.location.href = LINE_ADD_FRIEND_URL;
 }
 
 async function startAnalysis() {
@@ -1087,23 +1193,31 @@ async function openLineAddFriend() {
     return;
   }
 
-  const text = buildLineHandoffText();
-  let copied = false;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-    } catch { /* noop */ }
+  persistDiagnosisForLiff(analysisData);
+  persistDiagnosisForContinueFlow(analysisData);
+
+  const saved = await trySaveDiagnosisSnapshotToServer(true);
+  if (saved.reason === 'login_redirect') {
+    showLineToast('LINEログイン後に自動で友だち追加画面へ進みます。', true);
+    return;
   }
 
-  window.open(LINE_ADD_FRIEND_URL, '_blank', 'noopener,noreferrer');
-
-  if (copied) {
-    showLineToast('診断全文をコピーしました。LINEで友だち追加し、トークに長押しで貼り付けて送信してください。', true);
+  if (!saved.ok) {
+    if (saved.reason === 'liff_id_missing' || saved.reason === 'liff_init_failed') {
+      showLineToast('LINEログイン設定を確認できませんでした。line-liff-config.js の AXER_DIAGNOSIS_LIFF_ID を設定してください。', false);
+    } else {
+      showLineToast('LINE連携保存に失敗しました。このまま友だち追加後、専用ページで案内に沿ってお進みください。', false);
+    }
+  } else if (!saved.saved) {
+    showLineToast('保存先（KV）が未接続です。今回の結果はこのブラウザ内でのみ専用ページに引き継がれます。', false);
   } else {
-    showLineToast('LINEを開きました。コピーに失敗した場合は、もう一度ボタンを押すか内容を手入力してください。', false);
+    showLineToast('分析結果を保存しました。友だち追加後の専用ページでCSVをダウンロードできます。', true);
   }
+
+  window.location.href = LINE_ADD_FRIEND_URL;
 }
+
+void handleLineContinueAfterLoginIfNeeded();
 </script>
 </body>
 </html>
