@@ -62,6 +62,12 @@
       cursor: pointer;
     }
     .csv-btn:active { opacity: 0.92; }
+    .csv-btn.secondary {
+      margin-top: 12px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+      color: #f8fafc;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
     .diag-note {
       margin-top: 12px;
       font-size: 0.72rem;
@@ -244,7 +250,7 @@
           who +
           ' \u69d8\u5411\u3051\u306e<strong>\u516850\u9805\u76ee</strong>\u3092\u3001CSV\u30d5\u30a1\u30a4\u30eb1\u3064\u3067\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3067\u304d\u307e\u3059\uff08Excel\u5bfe\u5fdc\u306eUTF-8\uff09\u3002</p>' +
           '<button type="button" class="csv-btn" id="axerCsvBtn">\u5c02\u7528\u8a3a\u65ad\u30ec\u30dd\u30fc\u30c8\uff08CSV\uff09\u3092\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9</button>' +
-          '<p class="diag-note">\u203bCSV\u5148\u982d\u306bLINE\u8868\u793a\u540d\u3068\u51fa\u529b\u65e5\u6642\u304c\u8a18\u9332\u3055\u308c\u307e\u3059\u3002iPhone\u306eSafari\u3068LINE\u5185\u30d6\u30e9\u30a6\u30b6\u3067\u8a3a\u65ad\u3092\u5206\u3051\u305f\u5834\u5408\u306f\u3001\u7d50\u679c\u304c\u51fa\u306a\u3044\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u3002\u540c\u3058LINE\u5185\u304b\u3089 <a href="/service/diagnosis.html">\u8a3a\u65ad\u30da\u30fc\u30b8</a> \u3092\u5b9f\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>'
+          '<p class="diag-note">\u203bCSV\u5148\u982d\u306bLINE\u8868\u793a\u540d\u3068\u51fa\u529b\u65e5\u6642\u304c\u8a18\u9332\u3055\u308c\u307e\u3059\u3002KV\u672a\u63a5\u7d9a\u3067Safari\u3068LINE\u3092\u5206\u3051\u305f\u5834\u5408\u306f\u8a3a\u65ad\u304c\u5171\u6709\u3055\u308c\u306a\u3044\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u3002\u540c\u3058LINE\u5185\u304b\u3089 <a href="/service/diagnosis.html">\u8a3a\u65ad\u30da\u30fc\u30b8</a> \u3092\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002</p>'
         );
       }
 
@@ -280,8 +286,9 @@
         } else {
           reportHtml =
             '<div class="diag-report diag-report-empty">' +
-            '<p class="status wait" style="text-align:left">\u8a3a\u65ad\u7d50\u679c\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002<strong>LINE\u306e\u30d6\u30e9\u30a6\u30b6</strong>\u3067 <a href="/service/diagnosis.html">\u30db\u30fc\u30e0\u30da\u30fc\u30b8\u8a3a\u65ad</a> \u3092\u958b\u304d\u3001\u5206\u6790\u5b8c\u4e86\u5f8c\u306b\u3082\u3046\u4e00\u5ea6\u3053\u306e\u30da\u30fc\u30b8\u3092\u958b\u3044\u3066\u304f\u3060\u3055\u3044\uff08\u30b5\u30fc\u30d0\u306bKV\u3092\u63a5\u7d9a\u3057\u3066\u3044\u308c\u3070\u3001\u5225\u30d6\u30e9\u30a6\u30b6\u3067\u8a3a\u65ad\u3057\u305f\u7d50\u679c\u3082\u8868\u793a\u3055\u308c\u307e\u3059\uff09\u3002</p>' +
-            '<p class="sub hint-storage">\u203b\u30b5\u30fc\u30d0\u5074\u3067 KV\uff08Vercel / Upstash Redis\uff09\u304c\u672a\u8a2d\u5b9a\u306e\u3068\u304d\u306f\u3001\u540c\u3058\u30d6\u30e9\u30a6\u30b6\u5185\u306e\u4fdd\u5b58\u306e\u307f\u3067\u3059\u3002Safari\u3068LINE\u3067\u8a3a\u65ad\u3092\u5206\u3051\u305f\u5834\u5408\u306f\u3001LINE\u5185\u304b\u3089\u8a3a\u65ad\u3092\u3084\u308a\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>' +
+            '<p class="status wait" style="text-align:left">\u8a3a\u65ad\u7d50\u679c\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002\u4e0b\u306e\u30dc\u30bf\u30f3\u304b\u3089<strong>\u3053\u306eLINE\u5185\u306e\u30d6\u30e9\u30a6\u30b6</strong>\u3067\u8a3a\u65ad\u3092\u5b9f\u884c\u3057\u3001\u5206\u6790\u304c\u7d42\u308f\u3063\u305f\u3089<strong>\u53cb\u3060\u3061\u8ffd\u52a0\u6642\u306e\u5c02\u7528\u30ea\u30f3\u30af</strong>\u304b\u3089\u3082\u3046\u4e00\u5ea6\u3053\u306e\u30da\u30fc\u30b8\u3092\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002\u5c02\u7528\u8a3a\u65ad\u30ec\u30dd\u30fc\u30c8\uff08CSV\uff09\u304c\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3067\u304d\u307e\u3059\u3002</p>' +
+            '<button type="button" class="csv-btn secondary" id="axerOpenDiagnosisBtn">LINE\u5185\u3067\u30db\u30fc\u30e0\u30da\u30fc\u30b8\u8a3a\u65ad\u3092\u958b\u304f</button>' +
+            '<p class="sub hint-storage">\u203b<strong>KV\u63a5\u7d9a\u306f\u5fc5\u9808\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002</strong>\u4e0a\u306e\u30dc\u30bf\u30f3\u3067<strong>\u540c\u3058LINE\u5185</strong>\u3067\u8a3a\u65ad\u3057\u3001\u5c02\u7528\u30ea\u30f3\u30af\u3092\u3082\u3046\u4e00\u5ea6\u958b\u3051\u3070CSV\u307e\u3067\u884c\u3051\u307e\u3059\u3002KV\u3092\u3064\u306a\u3050\u3068\u3001Safari\u7b49\u3067\u8a3a\u65ad\u3057\u305f\u7d50\u679c\u3082\u3053\u306e\u30da\u30fc\u30b8\u306b\u8f09\u305b\u3089\u308c\u307e\u3059\uff08\u4efb\u610f\uff09\u3002</p>' +
             '</div>';
         }
         show(
@@ -306,6 +313,22 @@
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(u);
+            });
+          }
+        } else {
+          const openBtn = document.getElementById('axerOpenDiagnosisBtn');
+          if (openBtn) {
+            openBtn.addEventListener('click', function () {
+              var diagUrl = window.location.origin + '/service/diagnosis.html';
+              try {
+                if (typeof liff !== 'undefined' && typeof liff.openWindow === 'function') {
+                  liff.openWindow({ url: diagUrl });
+                } else {
+                  window.location.href = diagUrl;
+                }
+              } catch (e) {
+                window.location.href = diagUrl;
+              }
             });
           }
         }
