@@ -224,6 +224,48 @@
         return 'axer-shindan-tokutei-' + slugForFilename(viewerDisplayName) + '-' + host;
       }
 
+      async function downloadCsvWithFallback(csvText, fileBaseName) {
+        const bom = '\uFEFF';
+        const fileName = fileBaseName + '.csv';
+        const blob = new Blob([bom + csvText], { type: 'text/csv;charset=utf-8;' });
+        const objectUrl = URL.createObjectURL(blob);
+
+        // 1) 通常ダウンロード（Android/PC はこれで通ることが多い）
+        try {
+          const a = document.createElement('a');
+          a.href = objectUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (e) {}
+
+        // 2) iOS/LINE 向け: Web Share API でファイル共有（保存アプリへ送れる）
+        try {
+          const f = new File([bom + csvText], fileName, { type: 'text/csv;charset=utf-8;' });
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [f] })) {
+            await navigator.share({ files: [f], title: fileName });
+            URL.revokeObjectURL(objectUrl);
+            return;
+          }
+        } catch (e) {}
+
+        // 3) 最終フォールバック: 新規タブでCSV表示（共有・保存しやすくする）
+        try {
+          if (typeof liff !== 'undefined' && typeof liff.openWindow === 'function') {
+            liff.openWindow({ url: objectUrl, external: false });
+          } else {
+            window.open(objectUrl, '_blank');
+          }
+          window.setTimeout(function () {
+            URL.revokeObjectURL(objectUrl);
+          }, 12000);
+        } catch (e) {
+          URL.revokeObjectURL(objectUrl);
+          throw e;
+        }
+      }
+
       function renderDiagnosisBlock(diag, categories, viewerDisplayName) {
         let total = diag.totalScore;
         if (total == null) {
@@ -324,18 +366,16 @@
           );
           const btn = document.getElementById('axerCsvBtn');
           if (btn) {
-            btn.addEventListener('click', function () {
-              const csv = buildPersonalDiagnosisCsv(diag, cats, name);
-              const bom = '\uFEFF';
-              const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
-              const a = document.createElement('a');
-              const u = URL.createObjectURL(blob);
-              a.href = u;
-              a.download = personalCsvBasename(diag, name) + '.csv';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(u);
+            btn.addEventListener('click', async function () {
+              try {
+                const csv = buildPersonalDiagnosisCsv(diag, cats, name);
+                await downloadCsvWithFallback(csv, personalCsvBasename(diag, name));
+              } catch (e) {
+                show(
+                  '<p class="status err">CSV の保存に失敗しました。端末の共有メニューから保存をお試しください。</p>' +
+                    out.innerHTML
+                );
+              }
             });
           }
           return;
