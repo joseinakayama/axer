@@ -337,8 +337,16 @@
             ? data.diagnosis
             : null;
         const fromLocal = loadStoredDiagnosis();
-        const diag = fromServer || fromLocal;
-        if (fromServer) {
+        const serverTs = fromServer && Number(fromServer.savedAt) ? Number(fromServer.savedAt) : 0;
+        const localTs = fromLocal && Number(fromLocal.savedAt) ? Number(fromLocal.savedAt) : 0;
+
+        // 同一ユーザーが複数サイトを診断したとき、古いサーバーデータで上書きしない
+        const diag =
+          fromServer && fromLocal
+            ? (localTs > serverTs ? fromLocal : fromServer)
+            : (fromServer || fromLocal);
+
+        if (diag === fromServer && fromServer) {
           try {
             localStorage.setItem(AXER_DIAG_STORAGE_KEY, JSON.stringify(fromServer));
           } catch (e) {}
