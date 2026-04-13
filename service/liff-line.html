@@ -62,6 +62,45 @@
         return;
       }
 
+      /** liff.login() 後にクエリが落ちることがあるため、専用トークンを sessionStorage に退避 */
+      const LIFF_STATE_KEY = 'axer_liff_state_v1';
+
+      function liffStateFromUrl() {
+        const q = new URLSearchParams(window.location.search).get('liff.state');
+        if (q) return q;
+        const h = window.location.hash || '';
+        if (h.indexOf('liff.state=') === -1) return null;
+        try {
+          return new URLSearchParams(h.replace(/^#/, '')).get('liff.state');
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function persistLiffState(s) {
+        if (s && typeof s === 'string' && s.length > 0) {
+          try {
+            sessionStorage.setItem(LIFF_STATE_KEY, s);
+          } catch (e) {}
+        }
+      }
+
+      function readLiffState() {
+        let ctx = null;
+        try {
+          if (typeof liff.getAppContext === 'function') ctx = liff.getAppContext();
+        } catch (e) {}
+        const fromCtx = ctx && ctx.state;
+        const fromUrl = liffStateFromUrl();
+        let fromStore = null;
+        try {
+          fromStore = sessionStorage.getItem(LIFF_STATE_KEY);
+        } catch (e) {}
+        return fromCtx || fromUrl || fromStore || '';
+      }
+
+      persistLiffState(liffStateFromUrl());
+
       async function run() {
         try {
           await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
@@ -70,15 +109,20 @@
           return;
         }
 
+        persistLiffState(readLiffState());
+
         if (!liff.isLoggedIn()) {
           liff.login();
           return;
         }
 
-        const ctx = liff.getAppContext && liff.getAppContext();
-        const state = (ctx && ctx.state) || new URLSearchParams(window.location.search).get('liff.state');
+        const state = readLiffState();
         if (!state) {
-          show('<p class="status err">専用リンク（liff.state）が見つかりません。トークに届いたURLから開き直してください。</p>');
+          show(
+            '<p class="status err">専用リンク（liff.state）が見つかりません。' +
+              'トークに届いた <strong>liff.line.me で始まるURL</strong> から開いてください。' +
+              'このページのURLをブラウザに直接貼り付けただけでは開けません。</p>'
+          );
           return;
         }
 
@@ -106,6 +150,9 @@
             show('<p class="status err">本人確認に失敗しました。トークに届いたURLから開き直すか、お問い合わせください。</p>');
             return;
           }
+          try {
+            sessionStorage.removeItem(LIFF_STATE_KEY);
+          } catch (e) {}
           const pic = data.picture
             ? '<img class="avatar" src="' + data.picture.replace(/"/g, '') + '" alt="">'
             : '';

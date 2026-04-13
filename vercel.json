@@ -1,6 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "rewrites": [
+    {
+      "source": "/liff-line.html",
+      "destination": "/service/liff-line.html"
+    },
+    {
+      "source": "/liff-line",
+      "destination": "/service/liff-line.html"
+    },
+    {
+      "source": "/service/liff-line",
+      "destination": "/service/liff-line.html"
+    }
+  ],
   "functions": {
     "api/analyze50.js": {
       "maxDuration": 10
