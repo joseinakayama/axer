@@ -5,6 +5,7 @@
  * Web Request / Response API で生ボディを検証。
  *
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
+ * 任意: LINE_FETCH_TIMEOUT_MS（5000〜55000、未設定時は 28000ms）
  */
 
 export const config = { runtime: 'nodejs' };
@@ -70,17 +71,25 @@ async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1
   return `${payloadB64}.${sigB64url}`;
 }
 
-/** Node から LINE API までの往復に余裕を持たせる（Edge より安定しやすい） */
-const LINE_FETCH_TIMEOUT_MS = 20000;
+/** push 失敗後に reply も試すため、1 回あたりの上限は maxDuration（例: 60s）の約半分を目安に */
+function getLineFetchTimeoutMs() {
+  const raw = process.env.LINE_FETCH_TIMEOUT_MS;
+  const parsed =
+    raw != null && String(raw).trim() !== '' ? parseInt(String(raw).trim(), 10) : NaN;
+  const fallback = 28000;
+  if (!Number.isFinite(parsed) || parsed < 5000) return fallback;
+  return Math.min(parsed, 55000);
+}
 
 async function fetchLine(url, init) {
+  const ms = getLineFetchTimeoutMs();
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), LINE_FETCH_TIMEOUT_MS);
+  const t = setTimeout(() => ctrl.abort(), ms);
   try {
     return await fetch(url, { ...init, signal: ctrl.signal });
   } catch (e) {
     if (e.name === 'AbortError') {
-      console.error('[line webhook] fetch timeout', LINE_FETCH_TIMEOUT_MS + 'ms', url);
+      console.error('[line webhook] fetch timeout', ms + 'ms', url);
     } else {
       console.error('[line webhook] fetch error', url, e);
     }
