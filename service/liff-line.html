@@ -77,8 +77,16 @@
     .hint-storage { margin-top: 10px; }
   </style>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="line-liff-config.js"></script>
-  <script src="diagnosis-item-labels.js"></script>
+  <!-- 相対パスだと /liff-line 等の Endpoint から開いたとき JS が別パスに解決され 404 になるため /service/ 固定 -->
+  <script src="/service/line-liff-config.js"></script>
+  <script src="/service/diagnosis-item-labels.js"></script>
+  <script>
+    (function () {
+      if (typeof window.AXER_LIFF_ID !== 'string' || !String(window.AXER_LIFF_ID).trim()) {
+        window.AXER_LIFF_ID = '2009774828-fLas1Ciw';
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="card">
@@ -305,7 +313,7 @@
 
       if (!LIFF_ID || LIFF_ID === 'YOUR_LIFF_ID') {
         show(
-          '<p class="status err">LIFF ID が未設定です。service/line-liff-config.js の AXER_LIFF_ID を編集してください。</p>'
+          '<p class="status err">LIFF ID が取得できません。<code>/service/line-liff-config.js</code> が 200 で読み込めているか、LINE の Endpoint URL とパスを確認してください。</p>'
         );
         return;
       }
