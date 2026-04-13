@@ -62,8 +62,12 @@
         return;
       }
 
-      /** liff.login() 後にクエリが落ちることがあるため、専用トークンを sessionStorage に退避 */
+      /**
+       * liff.login() の OAuth 復帰でクエリが消える＋ sessionStorage が引き継がれない環境があるため、
+       * sessionStorage / localStorage / Cookie（SameSite=Lax）の3経路で専用トークンを退避する。
+       */
       const LIFF_STATE_KEY = 'axer_liff_state_v1';
+      const LIFF_STATE_COOKIE = 'axer_liff_s';
 
       function liffStateFromUrl() {
         const q = new URLSearchParams(window.location.search).get('liff.state');
@@ -77,12 +81,47 @@
         }
       }
 
-      function persistLiffState(s) {
-        if (s && typeof s === 'string' && s.length > 0) {
-          try {
-            sessionStorage.setItem(LIFF_STATE_KEY, s);
-          } catch (e) {}
+      function readStateCookie() {
+        try {
+          const m = document.cookie.match(
+            new RegExp('(?:^|; )' + LIFF_STATE_COOKIE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)')
+          );
+          return m ? decodeURIComponent(m[1]) : null;
+        } catch (e) {
+          return null;
         }
+      }
+
+      function persistLiffState(s) {
+        if (!s || typeof s !== 'string' || s.length < 1) return;
+        try {
+          sessionStorage.setItem(LIFF_STATE_KEY, s);
+        } catch (e) {}
+        try {
+          localStorage.setItem(LIFF_STATE_KEY, s);
+        } catch (e) {}
+        try {
+          const secure = location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie =
+            LIFF_STATE_COOKIE +
+            '=' +
+            encodeURIComponent(s) +
+            '; Path=/; Max-Age=900; SameSite=Lax' +
+            secure;
+        } catch (e) {}
+      }
+
+      function clearPersistedLiffState() {
+        try {
+          sessionStorage.removeItem(LIFF_STATE_KEY);
+        } catch (e) {}
+        try {
+          localStorage.removeItem(LIFF_STATE_KEY);
+        } catch (e) {}
+        try {
+          const secure = location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = LIFF_STATE_COOKIE + '=; Path=/; Max-Age=0; SameSite=Lax' + secure;
+        } catch (e) {}
       }
 
       function readLiffState() {
@@ -92,11 +131,16 @@
         } catch (e) {}
         const fromCtx = ctx && ctx.state;
         const fromUrl = liffStateFromUrl();
-        let fromStore = null;
+        let fromSs = null;
+        let fromLs = null;
         try {
-          fromStore = sessionStorage.getItem(LIFF_STATE_KEY);
+          fromSs = sessionStorage.getItem(LIFF_STATE_KEY);
         } catch (e) {}
-        return fromCtx || fromUrl || fromStore || '';
+        try {
+          fromLs = localStorage.getItem(LIFF_STATE_KEY);
+        } catch (e) {}
+        const fromCookie = readStateCookie();
+        return fromCtx || fromUrl || fromSs || fromLs || fromCookie || '';
       }
 
       persistLiffState(liffStateFromUrl());
@@ -112,7 +156,12 @@
         persistLiffState(readLiffState());
 
         if (!liff.isLoggedIn()) {
-          liff.login();
+          const redirectUri = window.location.origin + window.location.pathname;
+          try {
+            liff.login({ redirectUri: redirectUri });
+          } catch (e) {
+            liff.login();
+          }
           return;
         }
 
@@ -150,9 +199,7 @@
             show('<p class="status err">本人確認に失敗しました。トークに届いたURLから開き直すか、お問い合わせください。</p>');
             return;
           }
-          try {
-            sessionStorage.removeItem(LIFF_STATE_KEY);
-          } catch (e) {}
+          clearPersistedLiffState();
           const pic = data.picture
             ? '<img class="avatar" src="' + data.picture.replace(/"/g, '') + '" alt="">'
             : '';
