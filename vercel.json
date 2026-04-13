@@ -3,6 +3,18 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/service/liff-line.html/:path+",
+      "destination": "/service/liff-line.html"
+    },
+    {
+      "source": "/liff-line.html/:path+",
+      "destination": "/service/liff-line.html"
+    },
+    {
+      "source": "/service/liff-line/:path+",
+      "destination": "/service/liff-line.html"
+    },
+    {
       "source": "/liff-line.html",
       "destination": "/service/liff-line.html"
     },
