@@ -75,31 +75,54 @@ async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1
   return `${payloadB64}.${sigB64url}`;
 }
 
+const LINE_FETCH_TIMEOUT_MS = 8000;
+
+async function fetchLine(url, init) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), LINE_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      console.error('[line webhook] fetch timeout', LINE_FETCH_TIMEOUT_MS + 'ms', url);
+    } else {
+      console.error('[line webhook] fetch error', url, e);
+    }
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 /**
- * push は replyToken を使わない（あいさつ等で token が消費されていても送れる）。
- * push がダメなときだけ reply を試す。
+ * push は replyToken を使わない。push がダメなときだけ reply。
+ * fetch はタイムアウト付き（Edge の 25s 上限で FUNCTION_INVOCATION_FAILED にならないように）。
  */
 async function deliverFollowMessage(accessToken, userId, replyToken, text) {
   const auth = `Bearer ${accessToken.trim()}`;
   const headers = { 'Content-Type': 'application/json', Authorization: auth };
 
-  const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
+  const pushRes = await fetchLine('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
     headers,
     body: JSON.stringify({ to: userId, messages: [{ type: 'text', text }] }),
   });
-  if (pushRes.ok) return;
-  const pushErr = await pushRes.text();
-  console.error('[line webhook] push failed', pushRes.status, pushErr);
+  if (pushRes && pushRes.ok) return;
+  if (pushRes) {
+    const pushErr = await pushRes.text();
+    console.error('[line webhook] push failed', pushRes.status, pushErr);
+  }
 
   if (replyToken) {
-    const replyRes = await fetch('https://api.line.me/v2/bot/message/reply', {
+    const replyRes = await fetchLine('https://api.line.me/v2/bot/message/reply', {
       method: 'POST',
       headers,
       body: JSON.stringify({ replyToken, messages: [{ type: 'text', text }] }),
     });
-    if (replyRes.ok) return;
-    console.error('[line webhook] reply failed', replyRes.status, await replyRes.text());
+    if (replyRes && replyRes.ok) return;
+    if (replyRes) {
+      console.error('[line webhook] reply failed', replyRes.status, await replyRes.text());
+    }
   }
 }
 
@@ -141,7 +164,7 @@ export default async function handler(request) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  const events = body.events || [];
+  const events = Array.isArray(body.events) ? body.events : [];
   if (events.length > 0) {
     console.log(
       '[line webhook] events:',
@@ -149,6 +172,7 @@ export default async function handler(request) {
     );
   }
 
+  const deliveries = [];
   for (const event of events) {
     if (event.type !== 'follow') continue;
     const userId = event.source && event.source.userId;
@@ -173,8 +197,10 @@ export default async function handler(request) {
         '（管理者向け: Vercel に LINE_LIFF_ID を設定すると専用URLを送れます）';
     }
 
-    await deliverFollowMessage(accessToken, userId, replyToken, text);
+    deliveries.push(deliverFollowMessage(accessToken, userId, replyToken, text));
   }
+
+  await Promise.all(deliveries);
 
   return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }
