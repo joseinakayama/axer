@@ -12,10 +12,11 @@
 export const config = { runtime: 'edge' };
 
 function bytesToBase64Url(u8) {
+  const bytes = u8 instanceof Uint8Array ? u8 : new Uint8Array(u8);
   let bin = '';
-  u8.forEach((b) => {
-    bin += String.fromCharCode(b);
-  });
+  for (let i = 0; i < bytes.length; i++) {
+    bin += String.fromCharCode(bytes[i]);
+  }
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
