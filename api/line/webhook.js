@@ -74,6 +74,31 @@ async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1
   return `${payloadB64}.${sigB64url}`;
 }
 
+/** follow では reply が確実なことが多い。失敗時のみ push。 */
+async function deliverFollowMessage(accessToken, userId, replyToken, text) {
+  const auth = `Bearer ${accessToken.trim()}`;
+  const headers = { 'Content-Type': 'application/json', Authorization: auth };
+
+  if (replyToken) {
+    const replyRes = await fetch('https://api.line.me/v2/bot/message/reply', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ replyToken, messages: [{ type: 'text', text }] }),
+    });
+    if (replyRes.ok) return;
+    console.error('[line webhook] reply failed', replyRes.status, await replyRes.text());
+  }
+
+  const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ to: userId, messages: [{ type: 'text', text }] }),
+  });
+  if (!pushRes.ok) {
+    console.error('[line webhook] push failed', pushRes.status, await pushRes.text());
+  }
+}
+
 export default async function handler(request) {
   if (request.method === 'GET') {
     return new Response(
@@ -88,10 +113,10 @@ export default async function handler(request) {
 
   const rawBody = await request.text();
   const signature = request.headers.get('x-line-signature');
-  const channelSecret = process.env.LINE_CHANNEL_SECRET;
-  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const liffId = process.env.LINE_LIFF_ID;
-  const linkSecret = process.env.LINE_LINK_TOKEN_SECRET || channelSecret;
+  const channelSecret = process.env.LINE_CHANNEL_SECRET?.trim();
+  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
+  const liffId = process.env.LINE_LIFF_ID?.trim();
+  const linkSecret = (process.env.LINE_LINK_TOKEN_SECRET || channelSecret || '').trim();
 
   if (!channelSecret) {
     return new Response('OK', { status: 200 });
@@ -113,7 +138,13 @@ export default async function handler(request) {
   for (const event of events) {
     if (event.type !== 'follow') continue;
     const userId = event.source && event.source.userId;
-    if (!userId || !accessToken) continue;
+    const replyToken = event.replyToken;
+    if (!userId) continue;
+
+    if (!accessToken) {
+      console.error('[line webhook] LINE_CHANNEL_ACCESS_TOKEN is missing (Vercel Env を確認)');
+      continue;
+    }
 
     let text;
     if (liffId && linkSecret) {
@@ -125,23 +156,10 @@ export default async function handler(request) {
         url;
     } else {
       text =
-        '（管理者向け: Vercel に LINE_LIFF_ID / LINE_CHANNEL_ACCESS_TOKEN を設定してください）';
+        '（管理者向け: Vercel に LINE_LIFF_ID を設定すると専用URLを送れます）';
     }
 
-    const res = await fetch('https://api.line.me/v2/bot/message/push', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        to: userId,
-        messages: [{ type: 'text', text }],
-      }),
-    });
-    if (!res.ok) {
-      console.error('[line webhook] push failed', res.status, await res.text());
-    }
+    await deliverFollowMessage(accessToken, userId, replyToken, text);
   }
 
   return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
