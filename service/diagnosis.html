@@ -191,6 +191,17 @@
     margin: 12px auto 0;
     line-height: 1.75;
   }
+  .axer-liff-return-hint {
+    max-width: 960px;
+    margin: 0 auto 16px;
+    padding: 14px 16px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #312e81;
+  }
 
   /* Category Summary Cards */
   .cat-summary {
@@ -569,6 +580,9 @@
 </div>
 
 <div id="resultsSection">
+  <div id="axerLiffReturnHint" class="axer-liff-return-hint" hidden role="status">
+    <strong>専用レポート（CSV）</strong>は、LINEのトークの<strong>専用リンク（liff.line.me から始まるURL）</strong>を、分析が終わったあとにもう一度開くと表示されます。同じLINEアプリ内のままお使いください。
+  </div>
   <!-- Total Score -->
   <div class="total-score-area">
     <div class="score-circle-wrap">
@@ -703,6 +717,20 @@ function persistDiagnosisForLiff(data) {
   } catch (e) {}
 }
 
+function isAxerLiffFlowFromDedicated() {
+  try {
+    return new URLSearchParams(window.location.search).get('axer_liff_flow') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+function showAxerLiffReturnHintIfNeeded() {
+  const el = document.getElementById('axerLiffReturnHint');
+  if (!el || !isAxerLiffFlowFromDedicated()) return;
+  el.hidden = false;
+}
+
 /** 診断ページ用 LIFF ID（未設定時は専用ページと同じ ID を試す） */
 function liffIdForDiagnosisPage() {
   const d = typeof window.AXER_DIAGNOSIS_LIFF_ID === 'string' ? window.AXER_DIAGNOSIS_LIFF_ID.trim() : '';
@@ -756,6 +784,7 @@ async function startAnalysis() {
     document.getElementById('resultsSection').classList.add('visible');
     document.getElementById('footerActions').classList.add('visible');
     renderResults(data);
+    showAxerLiffReturnHintIfNeeded();
     setTimeout(() => document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' }), 100);
   } catch (err) {
     errorMsg.textContent = 'サーバーに接続できません。';
