@@ -7,7 +7,7 @@
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
  */
 
-export const config = { runtime: 'nodejs20.x' };
+export const config = { runtime: 'nodejs' };
 
 function bytesToBase64Url(u8) {
   const bytes = u8 instanceof Uint8Array ? u8 : new Uint8Array(u8);

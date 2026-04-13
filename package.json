@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "HP診断ツール - SEO & Webマーケティング分析",
   "main": "server.js",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
