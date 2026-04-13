@@ -74,10 +74,22 @@ async function createDedicatedToken(userId, secret, ttlMs = 7 * 24 * 60 * 60 * 1
   return `${payloadB64}.${sigB64url}`;
 }
 
-/** follow では reply が確実なことが多い。失敗時のみ push。 */
+/**
+ * push は replyToken を使わない（あいさつ等で token が消費されていても送れる）。
+ * push がダメなときだけ reply を試す。
+ */
 async function deliverFollowMessage(accessToken, userId, replyToken, text) {
   const auth = `Bearer ${accessToken.trim()}`;
   const headers = { 'Content-Type': 'application/json', Authorization: auth };
+
+  const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ to: userId, messages: [{ type: 'text', text }] }),
+  });
+  if (pushRes.ok) return;
+  const pushErr = await pushRes.text();
+  console.error('[line webhook] push failed', pushRes.status, pushErr);
 
   if (replyToken) {
     const replyRes = await fetch('https://api.line.me/v2/bot/message/reply', {
@@ -87,15 +99,6 @@ async function deliverFollowMessage(accessToken, userId, replyToken, text) {
     });
     if (replyRes.ok) return;
     console.error('[line webhook] reply failed', replyRes.status, await replyRes.text());
-  }
-
-  const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ to: userId, messages: [{ type: 'text', text }] }),
-  });
-  if (!pushRes.ok) {
-    console.error('[line webhook] push failed', pushRes.status, await pushRes.text());
   }
 }
 
@@ -119,7 +122,10 @@ export default async function handler(request) {
   const linkSecret = (process.env.LINE_LINK_TOKEN_SECRET || channelSecret || '').trim();
 
   if (!channelSecret) {
-    return new Response('OK', { status: 200 });
+    return new Response('LINE_CHANNEL_SECRET missing (Vercel Production に設定してください)', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   }
 
   const valid = await verifyLineSignature(rawBody, signature, channelSecret);
@@ -135,6 +141,13 @@ export default async function handler(request) {
   }
 
   const events = body.events || [];
+  if (events.length > 0) {
+    console.log(
+      '[line webhook] events:',
+      events.map((e) => e.type).join(',') || '(empty)'
+    );
+  }
+
   for (const event of events) {
     if (event.type !== 'follow') continue;
     const userId = event.source && event.source.userId;
