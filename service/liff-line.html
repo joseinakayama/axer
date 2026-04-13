@@ -81,6 +81,28 @@
         }
       }
 
+      /** liff.line.me/{LIFF_ID}/{token} から Endpoint に入った直後、referrer にトークンが残ることがある */
+      function liffStateFromLiffLineReferrer() {
+        try {
+          const ref = document.referrer;
+          if (!ref || ref.indexOf('liff.line.me') === -1) return null;
+          const u = new URL(ref);
+          const segments = u.pathname.split('/').filter(Boolean);
+          if (segments.length < 2) return null;
+          const lid = String(LIFF_ID || '');
+          if (segments[0] === lid) {
+            return segments.slice(1).join('/');
+          }
+          const i = segments.indexOf(lid);
+          if (i !== -1 && segments[i + 1]) {
+            return segments.slice(i + 1).join('/');
+          }
+          return segments.slice(1).join('/');
+        } catch (e) {
+          return null;
+        }
+      }
+
       function readStateCookie() {
         try {
           const m = document.cookie.match(
@@ -131,6 +153,7 @@
         } catch (e) {}
         const fromCtx = ctx && ctx.state;
         const fromUrl = liffStateFromUrl();
+        const fromReferrer = liffStateFromLiffLineReferrer();
         let fromSs = null;
         let fromLs = null;
         try {
@@ -140,10 +163,10 @@
           fromLs = localStorage.getItem(LIFF_STATE_KEY);
         } catch (e) {}
         const fromCookie = readStateCookie();
-        return fromCtx || fromUrl || fromSs || fromLs || fromCookie || '';
+        return fromCtx || fromUrl || fromReferrer || fromSs || fromLs || fromCookie || '';
       }
 
-      persistLiffState(liffStateFromUrl());
+      persistLiffState(liffStateFromUrl() || liffStateFromLiffLineReferrer());
 
       async function run() {
         try {

@@ -1,51 +1,46 @@
-'use strict';
-
 /**
- * LIFF から呼び出し: idToken（liff.getIDToken()）と liff.state（専用トークン）が同一ユーザか検証
+ * LIFF から呼び出し: idToken と liff.state（専用トークン）の突合
+ * Web 標準 fetch ハンドラ（default の (req,res) 関数は環境によってはルート未登録になり 404 になり得る）
  */
 
-const { handleVerifyDedicated } = require('../../lib/lineVerifyDedicatedHandler');
+import { createRequire } from 'node:module';
 
-function parseJsonBody(req) {
-  const b = req.body;
-  if (b == null) return {};
-  if (typeof b === 'string') {
-    try {
-      return JSON.parse(b);
-    } catch {
-      return {};
+const require = createRequire(import.meta.url);
+const { handleVerifyDedicated } = require('../../lib/lineVerifyDedicatedHandler.js');
+
+export const config = { runtime: 'nodejs' };
+
+export default {
+  async fetch(request) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      });
     }
-  }
-  if (Buffer.isBuffer(b)) {
-    try {
-      return JSON.parse(b.toString('utf8'));
-    } catch {
-      return {};
+
+    if (request.method !== 'POST') {
+      return Response.json({ ok: false, error: 'method_not_allowed' }, {
+        status: 405,
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      });
     }
-  }
-  return b;
-}
 
-module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
 
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.statusCode = 405;
-    res.end(JSON.stringify({ ok: false, error: 'method_not_allowed' }));
-    return;
-  }
-
-  const body = parseJsonBody(req);
-  const result = await handleVerifyDedicated(body, process.env);
-  res.statusCode = result.status;
-  res.end(JSON.stringify(result.json));
+    const result = await handleVerifyDedicated(body, process.env);
+    return Response.json(result.json, {
+      status: result.status,
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    });
+  },
 };

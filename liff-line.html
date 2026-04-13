@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リダイレクト中</title>
+  <script>
+    (function () {
+      var q = window.location.search || '';
+      var h = window.location.hash || '';
+      window.location.replace('/service/liff-line.html' + q + h);
+    })();
+  </script>
+</head>
+<body>
+  <p>専用ページへ転送しています…</p>
+</body>
+</html>

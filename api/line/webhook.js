@@ -189,7 +189,8 @@ export default {
       let text;
       if (liffId && linkSecret) {
         const token = await createDedicatedToken(userId, linkSecret);
-        const url = `https://liff.line.me/${liffId}?liff.state=${encodeURIComponent(token)}`;
+        /** クエリの liff.state より、LINE がよく使うパス形式の方が in-app で state が渡りやすい */
+      const url = `https://liff.line.me/${liffId}/${token}`;
         text =
           '【診断レポート用】\n' +
           '下のURLはあなた専用です。LINEアプリ内でタップして開いてください。\n\n' +
