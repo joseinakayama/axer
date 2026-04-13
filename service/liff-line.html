@@ -114,6 +114,7 @@
     (function () {
       const out = document.getElementById('out');
       const AXER_DIAG_STORAGE_KEY = 'axer_diagnosis_v1';
+      const AXER_DIAG_TRANSFER_KEY = 'axer_diag_transfer_v1';
       const LIFF_ID =
         typeof window.AXER_LIFF_ID === 'string' ? window.AXER_LIFF_ID.trim() : '';
 
@@ -137,6 +138,24 @@
         } catch (e) {
           return null;
         }
+      }
+
+      function loadTransferMarker() {
+        try {
+          const raw = localStorage.getItem(AXER_DIAG_TRANSFER_KEY);
+          if (!raw) return null;
+          const o = JSON.parse(raw);
+          if (!o || typeof o !== 'object') return null;
+          return o;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function clearTransferMarker() {
+        try {
+          localStorage.removeItem(AXER_DIAG_TRANSFER_KEY);
+        } catch (e) {}
       }
 
       function numToMeta(categories) {
@@ -337,20 +356,25 @@
             ? data.diagnosis
             : null;
         const fromLocal = loadStoredDiagnosis();
+        const transfer = loadTransferMarker();
         const serverTs = fromServer && Number(fromServer.savedAt) ? Number(fromServer.savedAt) : 0;
         const localTs = fromLocal && Number(fromLocal.savedAt) ? Number(fromLocal.savedAt) : 0;
 
-        // 同一ユーザーが複数サイトを診断したとき、古いサーバーデータで上書きしない
+        // ローカル結果は「診断ページからの直近受け渡し」がある場合のみ採用（古いサイト混入を防ぐ）
+        const transferTs = transfer && Number(transfer.savedAt) ? Number(transfer.savedAt) : 0;
+        const localAllowed = !!(fromLocal && transfer && transferTs > 0 && localTs >= transferTs - 120000);
+
         const diag =
-          fromServer && fromLocal
+          fromServer && localAllowed
             ? (localTs > serverTs ? fromLocal : fromServer)
-            : (fromServer || fromLocal);
+            : (fromServer || (localAllowed ? fromLocal : null));
 
         if (diag === fromServer && fromServer) {
           try {
             localStorage.setItem(AXER_DIAG_STORAGE_KEY, JSON.stringify(fromServer));
           } catch (e) {}
         }
+        if (diag) clearTransferMarker();
         return diag;
       }
 

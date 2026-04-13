@@ -693,6 +693,7 @@ const LINE_ADD_FRIEND_URL = 'https://lin.ee/TyDk96Y';
 const AXER_DIAG_STORAGE_KEY = 'axer_diagnosis_v1';
 const AXER_LINE_CONTINUE_SAVE_KEY = 'axer_line_continue_save_v1';
 const AXER_LINE_CONTINUE_DIAG_KEY = 'axer_line_continue_diag_v1';
+const AXER_DIAG_TRANSFER_KEY = 'axer_diag_transfer_v1';
 
 function buildDiagnosisSnapshotPayload(data) {
   if (!data || !Array.isArray(data.items)) return null;
@@ -1195,6 +1196,15 @@ async function openLineAddFriend() {
 
   persistDiagnosisForLiff(analysisData);
   persistDiagnosisForContinueFlow(analysisData);
+  try {
+    localStorage.setItem(
+      AXER_DIAG_TRANSFER_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        url: analysisData && analysisData.url ? analysisData.url : '',
+      })
+    );
+  } catch (e) {}
 
   const saved = await trySaveDiagnosisSnapshotToServer(true);
   if (saved.reason === 'login_redirect') {
