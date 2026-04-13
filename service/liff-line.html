@@ -254,6 +254,25 @@
         );
       }
 
+      /**
+       * LINE アプリ内では同一 WebView に遷移させると www.axer.co.jp の localStorage が診断ページと共有されやすい。
+       * openWindow だけだと別コンテキストになり、分析後に専用リンクを開き直してもデータが空のままになることがある。
+       */
+      function openDiagnosisPageInLine() {
+        var diagUrl = window.location.origin + '/service/diagnosis.html';
+        try {
+          if (typeof liff !== 'undefined' && typeof liff.isInClient === 'function' && liff.isInClient()) {
+            window.location.href = diagUrl;
+            return;
+          }
+          if (typeof liff !== 'undefined' && typeof liff.openWindow === 'function') {
+            liff.openWindow({ url: diagUrl, external: false });
+            return;
+          }
+        } catch (e) {}
+        window.location.href = diagUrl;
+      }
+
       function resolveDiagnosisPayload(data) {
         const fromServer =
           data.diagnosis &&
@@ -319,16 +338,7 @@
           const openBtn = document.getElementById('axerOpenDiagnosisBtn');
           if (openBtn) {
             openBtn.addEventListener('click', function () {
-              var diagUrl = window.location.origin + '/service/diagnosis.html';
-              try {
-                if (typeof liff !== 'undefined' && typeof liff.openWindow === 'function') {
-                  liff.openWindow({ url: diagUrl });
-                } else {
-                  window.location.href = diagUrl;
-                }
-              } catch (e) {
-                window.location.href = diagUrl;
-              }
+              openDiagnosisPageInLine();
             });
           }
         }
