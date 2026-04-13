@@ -2,7 +2,7 @@
  * LINE Messaging API Webhook（Vercel Node.js）
  *
  * Edge から api.line.me への fetch がタイムアウトしやすいため Node ランタイムを使用。
- * Web Request / Response API で生ボディを検証。
+ * Web 標準の fetch(request) エクスポートで生ボディを検証（default function だと req/res になり .text() が無い）。
  *
  * 環境変数: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_LIFF_ID
  * 任意: LINE_FETCH_TIMEOUT_MS（5000〜55000、未設定時は 28000ms）
@@ -127,81 +127,83 @@ async function deliverFollowMessage(accessToken, userId, replyToken, text) {
   }
 }
 
-export default async function handler(request) {
-  if (request.method === 'GET') {
-    return new Response(
-      'OK: LINE Webhook (POST only). Set this URL in LINE Developers → Messaging API → Webhook.',
-      { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
-    );
-  }
-
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
-  const rawBody = await request.text();
-  const signature = request.headers.get('x-line-signature');
-  const channelSecret = process.env.LINE_CHANNEL_SECRET?.trim();
-  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
-  const liffId = process.env.LINE_LIFF_ID?.trim();
-  const linkSecret = (process.env.LINE_LINK_TOKEN_SECRET || channelSecret || '').trim();
-
-  if (!channelSecret) {
-    return new Response('LINE_CHANNEL_SECRET missing (Vercel Production に設定してください)', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
-  }
-
-  const valid = await verifyLineSignature(rawBody, signature, channelSecret);
-  if (!valid) {
-    return new Response('Invalid signature', { status: 401 });
-  }
-
-  let body;
-  try {
-    body = JSON.parse(rawBody);
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
-  }
-
-  const events = Array.isArray(body.events) ? body.events : [];
-  if (events.length > 0) {
-    console.log(
-      '[line webhook] events:',
-      events.map((e) => e.type).join(',') || '(empty)'
-    );
-  }
-
-  const deliveries = [];
-  for (const event of events) {
-    if (event.type !== 'follow') continue;
-    const userId = event.source && event.source.userId;
-    const replyToken = event.replyToken;
-    if (!userId) continue;
-
-    if (!accessToken) {
-      console.error('[line webhook] LINE_CHANNEL_ACCESS_TOKEN is missing (Vercel Env を確認)');
-      continue;
+export default {
+  async fetch(request) {
+    if (request.method === 'GET') {
+      return new Response(
+        'OK: LINE Webhook (POST only). Set this URL in LINE Developers → Messaging API → Webhook.',
+        { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
+      );
     }
 
-    let text;
-    if (liffId && linkSecret) {
-      const token = await createDedicatedToken(userId, linkSecret);
-      const url = `https://liff.line.me/${liffId}?liff.state=${encodeURIComponent(token)}`;
-      text =
-        '【診断レポート用】\n' +
-        '下のURLはあなた専用です。LINEアプリ内でタップして開いてください。\n\n' +
-        url;
-    } else {
-      text =
-        '（管理者向け: Vercel に LINE_LIFF_ID を設定すると専用URLを送れます）';
+    if (request.method !== 'POST') {
+      return new Response('Method Not Allowed', { status: 405 });
     }
 
-    deliveries.push(deliverFollowMessage(accessToken, userId, replyToken, text));
-  }
+    const rawBody = await request.text();
+    const signature = request.headers.get('x-line-signature');
+    const channelSecret = process.env.LINE_CHANNEL_SECRET?.trim();
+    const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
+    const liffId = process.env.LINE_LIFF_ID?.trim();
+    const linkSecret = (process.env.LINE_LINK_TOKEN_SECRET || channelSecret || '').trim();
 
-  await Promise.all(deliveries);
+    if (!channelSecret) {
+      return new Response('LINE_CHANNEL_SECRET missing (Vercel Production に設定してください)', {
+        status: 503,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
 
-  return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-}
+    const valid = await verifyLineSignature(rawBody, signature, channelSecret);
+    if (!valid) {
+      return new Response('Invalid signature', { status: 401 });
+    }
+
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return new Response('Invalid JSON', { status: 400 });
+    }
+
+    const events = Array.isArray(body.events) ? body.events : [];
+    if (events.length > 0) {
+      console.log(
+        '[line webhook] events:',
+        events.map((e) => e.type).join(',') || '(empty)'
+      );
+    }
+
+    const deliveries = [];
+    for (const event of events) {
+      if (event.type !== 'follow') continue;
+      const userId = event.source && event.source.userId;
+      const replyToken = event.replyToken;
+      if (!userId) continue;
+
+      if (!accessToken) {
+        console.error('[line webhook] LINE_CHANNEL_ACCESS_TOKEN is missing (Vercel Env を確認)');
+        continue;
+      }
+
+      let text;
+      if (liffId && linkSecret) {
+        const token = await createDedicatedToken(userId, linkSecret);
+        const url = `https://liff.line.me/${liffId}?liff.state=${encodeURIComponent(token)}`;
+        text =
+          '【診断レポート用】\n' +
+          '下のURLはあなた専用です。LINEアプリ内でタップして開いてください。\n\n' +
+          url;
+      } else {
+        text =
+          '（管理者向け: Vercel に LINE_LIFF_ID を設定すると専用URLを送れます）';
+      }
+
+      deliveries.push(deliverFollowMessage(accessToken, userId, replyToken, text));
+    }
+
+    await Promise.all(deliveries);
+
+    return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+  },
+};
